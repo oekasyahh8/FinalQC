@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Histogram & Kapabilitas Interaktif - Sturges</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/design-tokens.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layouts.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <style>
+        .spec-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .spec-label {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: block;
+            color: var(--text);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .pct-badge {
+            background-color: var(--theme-tint);
+            color: var(--text);
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+            min-width: 45px;
+            text-align: center;
+            border: 1px solid var(--theme-color);
+        }
+
+        .bar-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .bar-background {
+            flex-grow: 1;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.6s ease;
+        }
+
+        #conclusionBox {
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
+
+        @media (min-width: 993px) {
+            #contentMiddle {
+                overflow: hidden;
+                padding-right: 0;
+            }
+            #contentMiddle .chart-container {
+                flex: 1;
+                min-height: 280px; /* Ensures histogram stays readable */
+            }
+        }
+    </style>
+</head>
+
+<body id="app-body" class="body-tool">
+
+    <header class="qcc-header">
+        <div id="live-time" class="live-time">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="live-time-text">Memuat waktu...</span>
+        </div>
+
+        <div class="header-title">Distribusi Histogram & Kapabilitas Sturges</div>
+
+        <div class="header-controls">
+            <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+            <a href="../index.html" class="btn-header" title="Kembali ke Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-wrapper-3col">
+        <div class="qcc-card left-panel">
+            <h3 class="panel-title">Input Data <span
+                    style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Observasi)</span></h3>
+            <div class="inputs-wrapper">
+                <div class="inputs-grid-4" id="inputs"></div>
+            </div>
+
+            <div>
+                <span class="spec-label">
+                    Batas Spesifikasi (LSL & USL)
+                    <span class="tooltip-container" style="vertical-align: text-top; margin-top: -2px;">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text" style="bottom: 120%;">LSL/USL: Batas bawah dan atas yang diminta
+                            spesifikasi teknis atau pelanggan. Buat nentuin barang OK atau Reject.</span>
+                    </span>
+                </span>
+                <div class="spec-group">
+                    <input type="number" id="lslInput" class="data-input" placeholder="LSL (Bawah)"
+                        oninput="updateChart()">
+                    <input type="number" id="uslInput" class="data-input" placeholder="USL (Atas)"
+                        oninput="updateChart()">
+                </div>
+            </div>
+
+            <div class="btn-group" id="control-buttons">
+                <button class="qcc-btn btn-random" onclick="generateRandomData()" title="Acak Data Observasi">🎲
+                    Acak</button>
+                <button class="qcc-btn btn-export" id="exportBtn" onclick="exportFullPage()"
+                    title="Export Laporan Grafik & Tabel">📸 Export</button>
+                <button class="qcc-btn btn-reset" onclick="resetAll()" title="Reset Semua Data & Spek">🗑️</button>
+            </div>
+
+            <div class="toggle-labels-container">
+                <input type="checkbox" id="showLabelsToggle" class="qcc-checkbox" onchange="toggleDataLabels()">
+                <label for="showLabelsToggle"
+                    style="font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);">🏷️ Tampilkan Label
+                    Data</label>
+            </div>
+
+            <div class="color-picker-container" id="color-picker">
+                <p>Tema Latar:</p>
+                <div class="color-options">
+                    <div class="color-circle" style="background: #f8f9fa;" onclick="changeBgColor('#f8f9fa')" title="Terang"></div>
+                    <div class="color-circle" style="background: #2b2d42;" onclick="changeBgColor('#2b2d42')" title="Gelap Malam"></div>
+                    <div class="color-circle" style="background: #e0fbfc;" onclick="changeBgColor('#e0fbfc')" title="Biru Es"></div>
+                    <div class="color-circle" style="background: #d8f3dc;" onclick="changeBgColor('#d8f3dc')" title="Hijau Mint"></div>
+                    <div class="color-circle" style="background: #ffe5d9;" onclick="changeBgColor('#ffe5d9')" title="Peach Soft"></div>
+                    <div class="color-circle" style="background: #7b2cbf;" onclick="changeBgColor('#7b2cbf')" title="Ungu Elegan"></div>
+                </div>
+            </div>
+
+            <div class="qcc-info-box" id="qccInfoBox" onclick="this.classList.toggle('active')">
+                <div class="qcc-info-header">📖 Fungsi Chart Ini</div>
+                <div class="qcc-info-content">
+                    Histogram digunakan untuk melihat penyebaran (distribusi) frekuensi data observasi dan variasi
+                    proses. Melalui Histogram, kita bisa menganalisis apakah variasi proses berdistribusi normal
+                    (simetris) serta menghitung nilai indeks kapabilitas proses (Cp & Cpk) untuk mengetahui apakah
+                    proses produksi kita mumpuni dalam memenuhi spesifikasi (LSL & USL).
+                </div>
+            </div>
+        </div>
+
+        <div class="qcc-card middle-panel">
+            <button class="btn-goto-input" onclick="scrollToInput()">✍️ Input / Edit Data</button>
+            <div id="emptyStateMiddle" class="empty-state">
+                <div style="font-size: 3.5rem; margin-bottom: 5px;">📉</div>
+                <p style="font-size: 1rem; margin: 0; font-weight: 600;">Isi data di panel kiri untuk melihat grafik.
+                </p>
+            </div>
+
+            <div id="contentMiddle" style="display: none; height: 100%; flex-direction: column; min-height: 0;">
+                <h3 class="panel-title">Distribusi Frekuensi Histogram</h3>
+                <div class="chart-container">
+                    <canvas id="histogram"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel" id="rightPanelContainer">
+            <!-- Card 1: Statistik Deskriptif -->
+            <div class="qcc-card collapsible-card collapsed" id="statCard">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)">
+                    <h3 class="panel-title" style="margin-bottom: 0;">📊 Statistik Deskriptif</h3>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="card-content" style="margin-top: 10px;">
+                    <div id="emptyStateRight" class="empty-state">
+                        <div style="font-size: 3.5rem; margin-bottom: 5px;">📋</div>
+                        <p style="font-size: 1rem; margin: 0; font-weight: 600;">Tabel statistik akan muncul di sini.</p>
+                    </div>
+                    <div id="contentRight" style="display: none; height: 100%; flex-direction: column; min-height: 0;">
+                        <div id="statOutput" class="stats-grid-2"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 2: Tabel Frekuensi Sturges -->
+            <div class="qcc-card collapsible-card collapsed" id="freqCard" style="margin-top: var(--space-md);">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)">
+                    <h3 class="panel-title" style="margin-bottom: 0;">📊 Tabel Frekuensi Sturges</h3>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="card-content" style="margin-top: 10px;">
+                    <div id="emptyStateFreq" class="empty-state">
+                        <div style="font-size: 3.5rem; margin-bottom: 5px;">📋</div>
+                        <p style="font-size: 1rem; margin: 0; font-weight: 600;">Tabel frekuensi akan muncul di sini.</p>
+                    </div>
+                    <div id="contentFreq" style="display: none; height: 100%; flex-direction: column; min-height: 0;">
+                        <div class="table-wrapper" style="margin-top: 0;">
+                            <div class="table-scroll-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Bawah</th>
+                                            <th>Atas</th>
+                                            <th>Freq</th>
+                                            <th style="width: 45%; text-align: left; padding-left: 10px;">Visual Persentase</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="freqTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Kesimpulan Analisis -->
+            <div class="conclusion-box collapsible-card collapsed" id="conclusionBox" style="margin-top: var(--space-md);">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--glass-border); padding-bottom: 6px; margin-bottom: 8px;">
+                    <div class="conclusion-title" id="conclusionIcon" style="margin-bottom: 0 !important; display: flex; align-items: center; gap: 6px;">💡 Menunggu Data</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Histogram')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="conclusion-text" id="conclusionText">
+                        Silakan input minimal 2 data observasi dan batas spesifikasi untuk memuat analisis kapabilitas proses (Cp & Cpk).
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 4: Rumus Perhitungan -->
+            <div class="qcc-card collapsible-card collapsed" id="rumusCard" style="margin-top: var(--space-md); padding: 12px 15px;">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)" style="margin-bottom: 8px;">
+                    <h4 class="panel-title" style="margin-bottom: 0; border: none; padding: 0; font-size: 12.5px; color: var(--primary); font-weight: 700; text-transform: uppercase;">🧮 Rumus Perhitungan</h4>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Histogram')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="formulaContainer" class="formula-grid">
+                        <div class="formula-box">
+                            <div class="formula-name">Jumlah Kelas Sturges (k)</div>
+                            <div class="math-block" style="padding: 10px; font-size: 13px;">
+                                <span class="formula-term" data-tooltip="k: Jumlah kelas/kelompok batang.">k</span>&nbsp;=&nbsp;1 + 3.322 × <span class="formula-term" data-tooltip="log10: Logaritma basis 10.">log10</span>(<span class="formula-term" data-tooltip="N: Jumlah total sampel.">N</span>)
+                            </div>
+                            <div class="formula-desc">Banyak batang pengelompokan data di histogram berdasarkan jumlah sampel (N).</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Lebar Interval Kelas (c)</div>
+                            <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+                                <span class="formula-term" data-tooltip="c: Lebar interval kelas.">c</span>&nbsp;=&nbsp;
+                                <div class="math-frac" style="font-size: 13px;">
+                                    <span class="math-num"><span class="formula-term" data-tooltip="Max: Nilai terbesar data.">Nilai Max</span> - <span class="formula-term" data-tooltip="Min: Nilai terkecil data.">Nilai Min</span></span>
+                                    <span class="math-den"><span class="formula-term" data-tooltip="k: Jumlah kelas.">k</span></span>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Lebar rentang nilai untuk setiap batang histogram.</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Rata-rata (Mean / X̄)</div>
+                            <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+                                <span class="formula-term" data-tooltip="X̄: Rata-rata data.">X̄</span>&nbsp;=&nbsp;
+                                <div class="math-frac" style="font-size: 13px;">
+                                    <span class="math-num"><span class="formula-term" data-tooltip="ΣX: Jumlah penambahan seluruh data.">ΣX</span></span>
+                                    <span class="math-den"><span class="formula-term" data-tooltip="N: Jumlah total sampel.">N</span></span>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Jumlah seluruh data dibagi banyak data (N) untuk mencari pusat distribusi.</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Standar Deviasi (σ)</div>
+                            <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+                                <span class="formula-term" data-tooltip="σ: Standar deviasi (sebaran data).">σ</span>&nbsp;=&nbsp;
+                                <span class="math-sqrt-sym" style="font-size: 1.25em;">√</span>
+                                <span class="math-sqrt" style="border-top: 1.5px solid var(--text); padding-top: 2px;">
+                                    <div class="math-frac" style="font-size: 13px; vertical-align: middle;">
+                                        <span class="math-num">Σ(<span class="formula-term" data-tooltip="X: Nilai individu data.">X</span> - <span class="formula-term" data-tooltip="X̄: Rata-rata.">X̄</span>)²</span>
+                                        <span class="math-den"><span class="formula-term" data-tooltip="N: Jumlah total sampel.">N</span> - 1</span>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="formula-desc">Mengukur keragaman atau sebaran data dari rata-ratanya.</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Kemiringan Kurva (Skewness)</div>
+                            <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+                                Skewness&nbsp;=&nbsp;
+                                <div class="math-frac" style="font-size: 13px;">
+                                    <span class="math-num">3 × (X̄ - <span class="formula-term" data-tooltip="Median: Nilai tengah setelah data diurutkan.">Median</span>)</span>
+                                    <span class="math-den"><span class="formula-term" data-tooltip="σ: Standar deviasi.">σ</span></span>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Mengukur derajat ketidaksimetrisan kurva sebaran data.</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Kapabilitas Potensial (Cp)</div>
+                            <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px;">
+                                <span class="formula-term" data-tooltip="Cp: Kapabilitas potensial.">Cp</span>&nbsp;=&nbsp;
+                                <div class="math-frac" style="font-size: 13px;">
+                                    <span class="math-num"><span class="formula-term" data-tooltip="USL: Batas spesifikasi atas.">USL</span> - <span class="formula-term" data-tooltip="LSL: Batas spesifikasi bawah.">LSL</span></span>
+                                    <span class="math-den">6 × <span class="formula-term" data-tooltip="σ: Standar deviasi.">σ</span></span>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Presisi mesin jika sebaran data terpusat sempurna di tengah USL & LSL.</div>
+                        </div>
+                        
+                        <div class="formula-box">
+                            <div class="formula-name">Kapabilitas Aktual (Cpk)</div>
+                            <div class="math-block" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; font-size: 13px;">
+                                <div style="display: inline-flex; align-items: center;">
+                                    Cpk&nbsp;=&nbsp;Min[&nbsp;Cpu&nbsp;,&nbsp;Cpl&nbsp;]
+                                </div>
+                                <div style="width: 100%; border-top: 1px dashed var(--glass-border); padding-top: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;">
+                                    <div style="display: flex; align-items: center;">
+                                        Cpu&nbsp;=&nbsp;
+                                        <div class="math-frac" style="vertical-align: middle;">
+                                            <span class="math-num">USL - X̄</span>
+                                            <span class="math-den">3σ</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center;">
+                                        Cpl&nbsp;=&nbsp;
+                                        <div class="math-frac" style="vertical-align: middle;">
+                                            <span class="math-num">X̄ - LSL</span>
+                                            <span class="math-den">3σ</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Kemampuan riil proses dengan memperhitungkan pergeseran rata-rata terhadap batas spesifikasi.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Mobile -->
+    <nav class="bottom-nav">
+        <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
+        <a href="scatter.html" class="bnav-item" title="Scatter">📈<span>Scatter</span></a>
+        <a href="histogram.html" class="bnav-item active" title="Histogram">📊<span>Histogram</span></a>
+        <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
+        <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+    </nav>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/chart-config.js"></script>
+    <script src="../js/export.js"></script>
+    <script>
+        // --- INIT (shared from js/utils.js) ---
+        startLiveClock('live-time-text');
+
+        let chartHistogram;
+
+        // --- INISIALISASI INPUT ---
+        const inputContainer = document.getElementById("inputs");
+        for (let i = 1; i <= 40; i++) {
+            const input = document.createElement("input");
+            input.type = "number";
+            input.className = "data-input";
+            input.placeholder = i;
+            input.oninput = updateChart;
+            inputContainer.appendChild(input);
+        }
+
+        // --- FITUR COPY-PASTE DARI EXCEL ---
+        inputContainer.addEventListener('paste', function (e) {
+            QCC.handleExcelPaste(e, '#inputs', updateChart);
+        });
+
+        // --- FUNGSI HISTOGRAM ---
+        function generateRandomData() {
+            const inputs = document.querySelectorAll("#inputs input");
+            const maxPoints = inputs.length; // 40 points
+
+            // Pilih tipe proses secara acak:
+            // 0: Kapabel (Proses Baik, Cpk >= 1.33) -> ~40%
+            // 1: Cukup/Rawan (1.0 <= Cpk < 1.33) -> ~30%
+            // 2: Buruk/Tidak Kapabel (Cpk < 1.0) -> ~30%
+            let processType = Math.random();
+
+            let targetMean, targetStd;
+
+            if (processType < 0.40) {
+                // 1. PROSES KAPABEL (BAIK)
+                // Mean harus dekat dengan tengah (55), Std Dev harus kecil (sekitar 4 - 5)
+                targetMean = 55 + (Math.random() * 4 - 2); // 53 s/d 57
+                targetStd = 4 + (Math.random() * 1.5);    // 4.0 s/d 5.5
+            } else if (processType < 0.70) {
+                // 2. PROSES CUKUP / RAWAN
+                // Bisa karena std dev agak besar (sekitar 7 - 8) ATAU mean agak bergeser
+                if (Math.random() > 0.5) {
+                    targetMean = 55 + (Math.random() * 4 - 2); // Centered
+                    targetStd = 7.5 + (Math.random() * 1.0);   // Std dev agak lebar (7.5 - 8.5)
+                } else {
+                    targetMean = Math.random() > 0.5 ? 47 + Math.random() * 2 : 63 - Math.random() * 2; // Mean shift
+                    targetStd = 5 + (Math.random() * 1.0); // Std dev wajar
+                }
+            } else {
+                // 3. PROSES BURUK / REJECT
+                // Bisa karena std dev besar sekali (>= 12) ATAU mean bergeser ekstrem (< 40 atau > 70)
+                if (Math.random() > 0.5) {
+                    targetMean = 55 + (Math.random() * 6 - 3); // Centered
+                    targetStd = 12 + (Math.random() * 3);     // Variasi sangat lebar (12 - 15)
+                } else {
+                    targetMean = Math.random() > 0.5 ? 35 - Math.random() * 5 : 75 + Math.random() * 5; // Geser ekstrem
+                    targetStd = 7 + (Math.random() * 2);      // Variasi normal/sedikit lebar
+                }
+            }
+
+            // Generate data menggunakan metode Box-Muller transform untuk distribusi normal
+            let arr = [];
+            for (let i = 0; i < maxPoints; i++) {
+                let u1 = Math.random();
+                let u2 = Math.random();
+                // standard normal variable
+                let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                // scale and shift
+                let val = Math.round(targetMean + z0 * targetStd);
+
+                // Batasi nilai agar tetap di rentang logis [5, 105]
+                val = Math.max(5, Math.min(105, val));
+                arr.push(val);
+            }
+
+            inputs.forEach((input, index) => {
+                input.value = arr[index];
+            });
+
+            document.getElementById("lslInput").value = "25";
+            document.getElementById("uslInput").value = "85";
+            updateChart();
+        }
+
+        function getData() {
+            return [...document.querySelectorAll("#inputs input")].map(i => parseFloat(i.value)).filter(v => !isNaN(v));
+        }
+
+        function calculateStats(data) {
+            if (data.length === 0) return null;
+            const sorted = [...data].sort((a, b) => a - b);
+            const N = data.length;
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const mean = data.reduce((a, b) => a + b, 0) / N;
+            const median = N % 2 === 0 ? (sorted[N / 2 - 1] + sorted[N / 2]) / 2 : sorted[Math.floor(N / 2)];
+            const std = Math.sqrt(data.map(x => (x - mean) ** 2).reduce((a, b) => a + b) / N);
+            return { N, min, max, mean, median, std };
+        }
+
+        function sturgesRule(n) { return Math.ceil(1 + 3.322 * Math.log10(n)); }
+
+        function createHistogram(data) {
+            if (data.length === 0) return null;
+            const n = data.length, bins = sturgesRule(n), min = Math.min(...data), max = Math.max(...data);
+            const adjustedMin = min - 0.5, adjustedMax = max + 0.5, width = (adjustedMax - adjustedMin) / bins;
+            let freq = new Array(bins).fill(0), boundaries = [];
+
+            for (let i = 0; i <= bins; i++) { boundaries.push((i === bins) ? adjustedMax : adjustedMin + (i * width)); }
+
+            data.forEach(v => {
+                let index = Math.floor((v - adjustedMin) / width);
+                if (index >= bins) index = bins - 1;
+                if (index < 0) index = 0;
+                freq[index]++;
+            });
+
+            return { freq, boundaries, bins, width };
+        }
+
+        Chart.defaults.font.family = "'Poppins', sans-serif";
+
+        const boundaryLabelPlugin = {
+            id: 'boundaryLabelPlugin',
+            afterDraw(chart, args, options) {
+                const { ctx, chartArea: { left, right, bottom }, scales: { x } } = chart;
+                const boundaries = options.boundaries;
+                const width = options.width;
+                const lsl = options.lsl;
+                const usl = options.usl;
+
+                if (!boundaries) return;
+                ctx.save();
+
+                ctx.beginPath();
+                ctx.moveTo(left, bottom);
+                ctx.lineTo(right, bottom);
+                ctx.strokeStyle = "rgba(0,0,0,0.2)";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                const fontSize = getChartFontSize(11);
+                ctx.font = `bold ${fontSize}px 'Poppins', sans-serif`;
+                ctx.textAlign = "center";
+
+                function drawXLabel(val) {
+                    const xPos = x.getPixelForValue(val);
+                    if (xPos < left - 2 || xPos > right + 2) return;
+
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, bottom);
+                    ctx.lineTo(xPos, bottom + 6);
+                    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+
+                    let formattedVal = Number(val).toFixed(1);
+                    if (Number.isInteger(val)) {
+                        formattedVal = Number(val).toFixed(0);
+                    }
+                    ctx.fillText(formattedVal, xPos, bottom + 18);
+                }
+
+                // Smart skipping to prevent overlap in mobile/desktop
+                const chartWidth = right - left;
+                const approxLabelWidth = window.innerWidth <= 480 ? 42 : 55;
+                const maxLabels = Math.floor(chartWidth / approxLabelWidth);
+                const totalLabelsCount = boundaries.length;
+
+                let stepIndex = 1;
+                if (totalLabelsCount > maxLabels) {
+                    stepIndex = Math.ceil(totalLabelsCount / maxLabels);
+                }
+
+                // Always draw first, last, and every stepIndex boundary
+                for (let i = 0; i < totalLabelsCount; i++) {
+                    if (i === 0 || i === totalLabelsCount - 1 || i % stepIndex === 0) {
+                        drawXLabel(boundaries[i]);
+                    }
+                }
+
+                if (!isNaN(lsl) && lsl < boundaries[0]) {
+                    let step = boundaries[0] - width;
+                    let failsafe = 0;
+                    while (step >= x.min && failsafe < 5) {
+                        const dist = x.getPixelForValue(boundaries[0]) - x.getPixelForValue(step);
+                        if (dist > approxLabelWidth) {
+                            drawXLabel(step);
+                        }
+                        step -= width;
+                        failsafe++;
+                    }
+                }
+
+                const maxBound = boundaries[boundaries.length - 1];
+                if (!isNaN(usl) && usl > maxBound) {
+                    let step = maxBound + width;
+                    let failsafe = 0;
+                    while (step <= x.max && failsafe < 5) {
+                        const dist = x.getPixelForValue(step) - x.getPixelForValue(maxBound);
+                        if (dist > approxLabelWidth) {
+                            drawXLabel(step);
+                        }
+                        step += width;
+                        failsafe++;
+                    }
+                }
+                ctx.restore();
+            }
+        };
+
+        const specLimitPlugin = {
+            id: 'specLimitPlugin',
+            afterDraw(chart, args, options) {
+                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+                const lsl = options.lsl;
+                const usl = options.usl;
+                const mean = options.mean;
+
+                function drawLine(val, label, color, dashPattern, yOffset = 0) {
+                    if (isNaN(val) || val === null || val === undefined) return;
+                    const xPos = x.getPixelForValue(val);
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(xPos, top);
+                    ctx.lineTo(xPos, bottom);
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeStyle = color;
+                    ctx.setLineDash(dashPattern);
+                    ctx.stroke();
+
+                    ctx.fillStyle = color;
+                    const labelSize = getChartFontSize(10);
+                    const boxWidth = label === "MEAN" ? labelSize * 4 : labelSize * 3.6;
+                    const boxHeight = labelSize * 1.8;
+                    ctx.fillRect(xPos - boxWidth / 2, top - boxHeight - 6 - yOffset, boxWidth, boxHeight);
+
+                    ctx.fillStyle = "white";
+                    ctx.font = `bold ${labelSize}px 'Poppins', sans-serif`;
+                    ctx.textAlign = "center";
+                    ctx.fillText(label, xPos, top - 6 - yOffset - (boxHeight * 0.25));
+                    ctx.restore();
+                }
+
+                drawLine(lsl, "LSL", "#ef233c", [6, 4], 0);
+                drawLine(usl, "USL", "#ef233c", [6, 4], 0);
+                drawLine(mean, "MEAN", "#2ec4b6", [4, 4], 16);
+            }
+        };
+
+        function resetStats() {
+            const out = document.getElementById("statOutput");
+            if (out) {
+                out.innerHTML = `
+                <div class="stat-box"><span>Banyak (N)</span><strong>0</strong></div>
+                <div class="stat-box"><span>Rata-rata</span><strong>0.00</strong></div>
+                <div class="stat-box"><span>Min Asli</span><strong>0.00</strong></div>
+                <div class="stat-box"><span>Max Asli</span><strong>0.00</strong></div>
+                <div class="stat-box"><span>Median</span><strong>0.00</strong></div>
+                <div class="stat-box"><span>Std. Dev</span><strong>0.00</strong></div>
+                
+                <div class="stat-box" style="background: var(--theme-tint); border-color: var(--theme-color);">
+                    <span>Index Cp 
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Kapabilitas Potensial. Mengukur kemampuan presisi mesin/proses, belum melihat posisinya geser dari tengah LSL-USL atau ngga. Makin tinggi makin presisi.</span>
+                        </span>
+                    </span>
+                    <strong style="color: var(--theme-color);">-</strong>
+                </div>
+                <div class="stat-box" style="background: var(--theme-tint); border-color: var(--theme-color);">
+                    <span>Index Cpk 
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Kapabilitas Aktual. Mengukur kemampuan riil mesin dengan mempertimbangkan posisinya. Kalau nilainya >= 1.33 berarti kualitas mantap.</span>
+                        </span>
+                    </span>
+                    <strong style="color: var(--theme-color);">-</strong>
+                </div>
+            `;
+            }
+        }
+
+
+
+        function updateChart() {
+            const data = getData();
+            const cMid = document.getElementById("contentMiddle"), eMid = document.getElementById("emptyStateMiddle");
+            const cRight = document.getElementById("contentRight"), eRight = document.getElementById("emptyStateRight");
+            const cFreq = document.getElementById("contentFreq"), eFreq = document.getElementById("emptyStateFreq");
+            const conclusionBox = document.getElementById("conclusionBox");
+            const rumusCard = document.getElementById("rumusCard");
+
+            const lslInputVal = document.getElementById("lslInput").value;
+            const uslInputVal = document.getElementById("uslInput").value;
+            const lslVal = safeParseNumber(lslInputVal);
+            const uslVal = safeParseNumber(uslInputVal);
+
+            if (chartHistogram) chartHistogram.destroy();
+
+            // Simpan data mentah ke localStorage
+            const inputs = document.querySelectorAll("#inputs input");
+            saveToStorage('histogram', {
+                values: Array.from(inputs).map(i => i.value),
+                lsl: lslInputVal,
+                usl: uslInputVal
+            });
+
+            // Validasi: Data Kosong
+            if (data.length === 0) {
+                cMid.style.display = "none"; eMid.style.display = "flex";
+                cRight.style.display = "none"; eRight.style.display = "flex";
+                if (cFreq) cFreq.style.display = "none";
+                if (eFreq) eFreq.style.display = "flex";
+                if (conclusionBox) {
+                    const isCollapsed = conclusionBox.classList.contains("collapsed");
+                    conclusionBox.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''}`;
+                    conclusionBox.style.borderLeftColor = "";
+                    conclusionBox.style.backgroundColor = "";
+                    document.getElementById("conclusionIcon").innerHTML = "💡 Menunggu Data";
+                    document.getElementById("conclusionText").innerHTML = "Silakan input minimal 2 data observasi dan batas spesifikasi untuk memuat analisis kapabilitas proses (Cp & Cpk).";
+                }
+                resetStats();
+                return;
+            }
+
+            // Validasi: Jumlah Data Observasi Kurang dari 2
+            if (data.length < 2) {
+                cMid.style.display = "flex"; eMid.style.display = "none";
+                cRight.style.display = "flex"; eRight.style.display = "none";
+                if (cFreq) cFreq.style.display = "none";
+                if (eFreq) eFreq.style.display = "flex";
+                if (conclusionBox) {
+                    const isCollapsed = conclusionBox.classList.contains("collapsed");
+                    conclusionBox.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} warning`;
+                    conclusionBox.style.borderLeftColor = 'var(--warning)';
+                    conclusionBox.style.backgroundColor = document.body.classList.contains('dark-mode') ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.05)';
+                    document.getElementById("conclusionIcon").innerHTML = "⚠️ Data Belum Cukup";
+                    document.getElementById("conclusionText").innerHTML = `
+                        <ul>
+                            <li>Data belum cukup untuk membuat analisis yang valid. Masukkan minimal 2 data observasi.</li>
+                        </ul>
+                    `;
+                }
+                resetStats();
+                document.getElementById("freqTable").innerHTML = "";
+                return;
+            }
+
+            // Validasi: LSL > USL
+            if (lslVal !== null && uslVal !== null && lslVal > uslVal) {
+                cMid.style.display = "flex"; eMid.style.display = "none";
+                cRight.style.display = "flex"; eRight.style.display = "none";
+                if (cFreq) cFreq.style.display = "none";
+                if (eFreq) eFreq.style.display = "flex";
+                if (conclusionBox) {
+                    const isCollapsed = conclusionBox.classList.contains("collapsed");
+                    conclusionBox.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} danger`;
+                    conclusionBox.style.borderLeftColor = 'var(--danger)';
+                    conclusionBox.style.backgroundColor = document.body.classList.contains('dark-mode') ? 'rgba(239, 35, 60, 0.15)' : 'rgba(239, 35, 60, 0.05)';
+                    document.getElementById("conclusionIcon").innerHTML = "❌ Kesalahan Spesifikasi";
+                    document.getElementById("conclusionText").innerHTML = `
+                        <ul>
+                            <li>Nilai LSL tidak boleh lebih besar dari USL.</li>
+                        </ul>
+                    `;
+                }
+                resetStats();
+                document.getElementById("freqTable").innerHTML = "";
+                return;
+            }
+
+            eMid.style.display = "none"; cMid.style.display = "flex";
+            eRight.style.display = "none"; cRight.style.display = "flex";
+            if (eFreq) eFreq.style.display = "none";
+            if (cFreq) cFreq.style.display = "flex";
+
+            const hist = createHistogram(data), stats = calculateStats(data);
+
+            let chartMin = hist.boundaries[0];
+            let chartMax = hist.boundaries[hist.boundaries.length - 1];
+
+            if (lslVal !== null && lslVal < chartMin) chartMin = lslVal;
+            if (uslVal !== null && uslVal > chartMax) chartMax = uslVal;
+
+            const valRange = chartMax - chartMin;
+            const padding = valRange > 0 ? valRange * 0.08 : hist.width;
+            chartMin -= padding;
+            chartMax += padding;
+
+            const datasetData = hist.freq.map((f, i) => ({
+                x: hist.boundaries[i] + (hist.width / 2),
+                y: f
+            }));
+
+            let cpText = "-";
+            let cpkText = "-";
+
+            if (stats.std > 0) {
+                let cpu = null, cpl = null;
+                if (uslVal !== null) cpu = (uslVal - stats.mean) / (3 * stats.std);
+                if (lslVal !== null) cpl = (stats.mean - lslVal) / (3 * stats.std);
+
+                if (cpu !== null && cpl !== null) {
+                    cpText = ((uslVal - lslVal) / (6 * stats.std)).toFixed(2);
+                    cpkText = Math.min(cpu, cpl).toFixed(2);
+                } else if (cpu !== null) {
+                    cpkText = cpu.toFixed(2);
+                } else if (cpl !== null) {
+                    cpkText = cpl.toFixed(2);
+                }
+            }
+
+            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
+
+            const ctx1 = document.getElementById("histogram").getContext("2d");
+            chartHistogram = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    datasets: [
+                        {
+                            type: "bar",
+                            label: "Histogram",
+                            data: datasetData,
+                            backgroundColor: 'rgba(37, 127, 168, 0.8)',
+                            borderColor: '#257fa8',
+                            borderWidth: 1.5,
+                            borderRadius: { topLeft: 6, topRight: 6 },
+                            categoryPercentage: 1.0,
+                            barPercentage: 1.0,
+                            order: 2
+                        },
+                        {
+                            type: "line",
+                            label: "Poligon Frekuensi",
+                            data: datasetData,
+                            borderColor: textColor === '#f8fafc' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+                            borderWidth: 2,
+                            pointBackgroundColor: textColor === '#f8fafc' ? '#1e293b' : '#ffffff',
+                            pointBorderColor: textColor === '#f8fafc' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: false,
+                            tension: 0.3,
+                            order: 1
+                        }
+                    ]
+                },
+                options: {
+                    ...getDefaultChartOptions(QCC.isMobile),
+                    animation: false,
+                    animations: false,
+                    transitions: {
+                        active: { animation: { duration: 0 } },
+                        resize: { animation: { duration: 0 } }
+                    },
+                    layout: {
+                        padding: window.innerWidth <= 576
+                            ? { top: 38, bottom: 28, left: 6, right: 6 }
+                            : { top: 45, bottom: 35, left: 15, right: 15 }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear', min: chartMin, max: chartMax,
+                            grid: { display: false }, ticks: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                color: textColor,
+                                font: { family: "'Poppins', sans-serif", size: getChartFontSize(11) }
+                            },
+                            grid: { color: "rgba(100,100,100,0.15)", borderDash: [5, 5] }
+                        }
+                    },
+                    plugins: {
+                        ...getDefaultChartOptions(QCC.isMobile).plugins,
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            titleFont: { family: "'Poppins', sans-serif", size: getChartFontSize(12) },
+                            bodyFont: { family: "'Poppins', sans-serif", size: getChartFontSize(12), weight: 'bold' },
+                            padding: 8, displayColors: false,
+                            filter: function (tooltipItem) { return tooltipItem.datasetIndex === 0; },
+                            callbacks: {
+                                title: (items) => `Rentang: ${hist.boundaries[items[0].dataIndex].toFixed(2)} - ${hist.boundaries[items[0].dataIndex + 1].toFixed(2)}`,
+                                label: (item) => `Frekuensi: ${item.parsed.y} (${((item.parsed.y / stats.N) * 100).toFixed(1)}%)`
+                            }
+                        },
+                        boundaryLabelPlugin: { boundaries: hist.boundaries, width: hist.width, lsl: lslVal, usl: uslVal },
+                        specLimitPlugin: { boundaries: hist.boundaries, lsl: lslVal, usl: uslVal, mean: stats.mean },
+                        qccDataLabels: { enabled: document.getElementById("showLabelsToggle").checked }
+                    }
+                },
+                plugins: [boundaryLabelPlugin, specLimitPlugin]
+            });
+
+            let boxClass = "";
+            let iconStatus = "";
+            let titleStatus = "";
+            let deskripsiBentuk = "";
+            let deskripsiCpk = "";
+            let investigasi = "";
+
+            if (stats.std === 0) {
+                boxClass = "warning";
+                iconStatus = "⚠️";
+                titleStatus = "Data Mencurigakan!";
+                deskripsiBentuk = "Kok ukurannya kembar semua persis? Di lapangan nyaris mustahil semua part punya ukuran 100% sama.";
+                investigasi = "Cek alat ukur (kalau-kalau jarumnya macet/rusak) atau jangan-jangan ini cuma 'tembak angka' operator. Ukur ulang yang benar di lapangan!";
+            } else {
+                const skewness = (3 * (stats.mean - stats.median)) / stats.std;
+
+                if (skewness > 0.3) {
+                    deskripsiBentuk = `⚠️ <b>Awas Ukuran Geser!</b> Kurva lari ke kanan. Ukuran rata-rata (<b>${stats.mean.toFixed(2)}</b>) lebih besar dari biasanya.`;
+                    investigasi = "Cek kondisi mesin sekarang! Biasanya karena ada bram (gram) yang nyangkut di <i>jig/fixture</i>, atau klem kurang kencang jadi part membesar.";
+                } else if (skewness < -0.3) {
+                    deskripsiBentuk = `⚠️ <b>Awas Ukuran Geser!</b> Kurva lari ke kiri. Ukuran rata-rata (<b>${stats.mean.toFixed(2)}</b>) makin mengecil.`;
+                    investigasi = "Segera cek keausan alat potong (<i>insert/blade</i>). Kalau insert udah aus tumpul, part pasti perlahan mengecil. Ganti insert jika perlu!";
+                } else {
+                    deskripsiBentuk = `✅ <b>Aman & Stabil!</b> Ukuran part engine konsisten di tengah. Kurva lonceng sehat.`;
+                    investigasi = "";
+                }
+
+                if (cpkText !== "-") {
+                    let cpkNum = parseFloat(cpkText);
+
+                    if (cpkNum >= 1.33) {
+                        boxClass = "success";
+                        iconStatus = "✅";
+                        titleStatus = "Mesin Sehat (Mumpuni)";
+                        deskripsiCpk = `Nilai Cpk bagus (<b>${cpkNum}</b>). Part aman di dalam standar toleransi.`;
+                        if (skewness > -0.3 && skewness < 0.3) {
+                            investigasi = "Kerja bagus! LANJUTKAN produksi sesuai SOP. Jangan ada yang iseng ngutak-ngatik parameter mesin lagi.";
+                        }
+                    } else if (cpkNum >= 1.0) {
+                        boxClass = "warning";
+                        iconStatus = "⚠️";
+                        titleStatus = "Kondisi Rawan NG!";
+                        deskripsiCpk = `Nilai Cpk pas-pasan (<b>${cpkNum}</b>). Ukuran part udah mepet banget pinggiran batas atas/bawah. Jangan lengah!`;
+                        investigasi = (investigasi ? investigasi + " " : "") + "Segera bersihkan area cekam mesin, cek parameter, dan info ke TL sebelum part beneran <i>reject</i>.";
+                    } else {
+                        boxClass = "danger";
+                        iconStatus = "❌";
+                        titleStatus = "STOP MESIN! TARIK ANDON!";
+                        deskripsiCpk = `Nilai Cpk hancur (<b>${cpkNum}</b>). Part udah banyak yang NG/reject keluar batas toleransi! Jangan diterusin!`;
+                        investigasi = (investigasi ? investigasi + " " : "") + "Panggil Maintenance atau TL SEKARANG buat cek <i>Henkaten</i> (4M) sebelum mesin dijalankan lagi!";
+                    }
+                } else {
+                    boxClass = "warning";
+                    iconStatus = "💡";
+                    titleStatus = "Menunggu Batas Spesifikasi";
+                    deskripsiCpk = "Masukkan nilai LSL (Bawah) dan USL (Atas) untuk ngecek apakah part kita NG atau OK.";
+                }
+            }
+
+            const isCollapsed = conclusionBox.classList.contains("collapsed");
+            conclusionBox.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} ${boxClass}`;
+            conclusionBox.style.display = "block";
+            if (rumusCard) rumusCard.style.display = "flex";
+
+            const isDark = document.body.classList.contains('dark-mode');
+            let titleColor = '';
+            if (boxClass === 'danger') {
+                conclusionBox.style.borderLeftColor = 'var(--danger)';
+                conclusionBox.style.backgroundColor = isDark ? 'rgba(239, 35, 60, 0.15)' : 'rgba(239, 35, 60, 0.05)';
+                titleColor = isDark ? '#fca5a5' : 'var(--danger)';
+            } else if (boxClass === 'warning') {
+                conclusionBox.style.borderLeftColor = 'var(--warning)';
+                conclusionBox.style.backgroundColor = isDark ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.05)';
+                titleColor = isDark ? '#fcd34d' : '#d97706';
+            } else {
+                conclusionBox.style.borderLeftColor = 'var(--success)';
+                conclusionBox.style.backgroundColor = isDark ? 'rgba(46, 196, 182, 0.15)' : 'rgba(46, 196, 182, 0.05)';
+                titleColor = isDark ? '#86efac' : 'var(--success)';
+            }
+
+            conclusionBox.innerHTML = `
+                <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                    <span id="conclusionIcon" class="conclusion-icon">
+                        <span style="color: ${titleColor}; font-weight: 700;">${iconStatus} ${titleStatus}</span>
+                    </span>
+                    <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                </div>
+                <div class="conclusion-content collapsible-content">
+                    <div id="conclusionText" class="conclusion-text">
+                        <ul style="margin-top: var(--space-xs); padding-left: 20px; display: flex; flex-direction: column; gap: var(--space-xs);">
+                            <li>${deskripsiBentuk}</li>
+                            ${deskripsiCpk ? `<li>${deskripsiCpk}</li>` : ''}
+                            ${investigasi ? `<li><b>💡 Saran Tindakan Lapangan:</b> ${investigasi}</li>` : ''}
+                        </ul>
+                    </div>
+                    <button class="qcc-btn btn-focus-trigger" onclick="QCC.openFocusModal()" style="margin-top: var(--space-md); width: 100%;"><i class="fas fa-expand-arrows-alt"></i> Buka Layar Penuh</button>
+                </div>
+            `;
+
+            // Tampilkan Statistik Dasar
+            document.getElementById("statOutput").innerHTML = `
+            <div class="stat-box"><span>Banyak (N)</span><strong>${stats.N}</strong></div>
+            <div class="stat-box"><span>Rata-rata</span><strong>${stats.mean.toFixed(2)}</strong></div>
+            <div class="stat-box"><span>Min Asli</span><strong>${stats.min.toFixed(2)}</strong></div>
+            <div class="stat-box"><span>Max Asli</span><strong>${stats.max.toFixed(2)}</strong></div>
+            <div class="stat-box"><span>Median</span><strong>${stats.median.toFixed(2)}</strong></div>
+            <div class="stat-box"><span>Std. Dev</span><strong>${stats.std.toFixed(2)}</strong></div>
+            
+            <div class="stat-box" style="background: var(--theme-tint); border-color: var(--theme-color);">
+                <span>Index Cp 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Kapabilitas Potensial. Mengukur kemampuan presisi mesin/proses, belum melihat posisinya geser dari tengah LSL-USL atau ngga. Makin tinggi makin presisi.</span>
+                    </span>
+                </span>
+                <strong style="color: var(--theme-color);">${cpText}</strong>
+            </div>
+            <div class="stat-box" style="background: var(--theme-tint); border-color: var(--theme-color);">
+                <span>Index Cpk 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Kapabilitas Aktual. Mengukur kemampuan riil mesin dengan mempertimbangkan posisinya. Kalau nilainya >= 1.33 berarti kualitas mantap.</span>
+                    </span>
+                </span>
+                <strong style="color: var(--theme-color);">${cpkText}</strong>
+            </div>
+        `;
+
+            // Tampilkan Tabel Distribusi
+            const tbody = document.getElementById("freqTable");
+            tbody.innerHTML = "";
+            const maxFreq = Math.max(...hist.freq);
+
+            for (let i = 0; i < hist.bins; i++) {
+                let pct = ((hist.freq[i] / stats.N) * 100).toFixed(2);
+                let barWidth = maxFreq === 0 ? 0 : (hist.freq[i] / maxFreq) * 100;
+
+                tbody.innerHTML += `
+            <tr>
+                <td>${hist.boundaries[i].toFixed(2)}</td>
+                <td>${hist.boundaries[i + 1].toFixed(2)}</td>
+                <td><strong style="color: var(--text);">${hist.freq[i]}</strong></td>
+                <td style="padding-left: 10px;">
+                    <div class="bar-wrapper">
+                        <span class="pct-badge">${pct}%</span>
+                        <div class="bar-background"><div class="bar-fill" style="width: ${barWidth}%; background-color: var(--theme-color);"></div></div>
+                    </div>
+                </td>
+            </tr>`;
+            }
+            adjustMobileLayout();
+        }
+
+        function resetAll() {
+            if (!confirm("Yakin ingin reset semua data dan parameter?")) return;
+            document.querySelectorAll("#inputs input").forEach(i => i.value = "");
+            document.getElementById("lslInput").value = "";
+            document.getElementById("uslInput").value = "";
+            clearStorage('histogram');
+
+            if (chartHistogram) {
+                chartHistogram.destroy();
+                chartHistogram = null;
+            }
+
+            document.getElementById("contentMiddle").style.display = "none";
+            document.getElementById("emptyStateMiddle").style.display = "flex";
+            document.getElementById("contentRight").style.display = "none";
+            document.getElementById("emptyStateRight").style.display = "flex";
+
+            const cFreq = document.getElementById("contentFreq");
+            const eFreq = document.getElementById("emptyStateFreq");
+            if (cFreq) cFreq.style.display = "none";
+            if (eFreq) eFreq.style.display = "flex";
+
+            const rumusCard = document.getElementById("rumusCard");
+            if (rumusCard) rumusCard.style.display = "none";
+
+            resetStats();
+            document.getElementById("freqTable").innerHTML = "";
+        }
+
+        function changeBgColor(colorHex) {
+            const isDark = (colorHex === '#2b2d42' || colorHex === '#7b2cbf');
+            QCC.changeBgColor(colorHex, chartHistogram, 'histogram_bg');
+            if (chartHistogram) {
+                chartHistogram.data.datasets[1].borderColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+                chartHistogram.data.datasets[1].pointBackgroundColor = isDark ? '#1e293b' : '#ffffff';
+                chartHistogram.data.datasets[1].pointBorderColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)';
+                chartHistogram.update('none');
+            }
+        }
+
+        function toggleTheme() {
+            QCC.toggleTheme(chartHistogram, 'histogram_bg');
+            const isDark = document.body.classList.contains('dark-mode');
+            if (chartHistogram) {
+                chartHistogram.data.datasets[1].borderColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)';
+                chartHistogram.data.datasets[1].pointBackgroundColor = isDark ? '#1e293b' : '#ffffff';
+                chartHistogram.data.datasets[1].pointBorderColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)';
+                chartHistogram.update('none');
+            }
+        }
+
+        function toggleDataLabels() {
+            const show = document.getElementById("showLabelsToggle").checked;
+            saveToStorage('histogram_showLabels', show);
+            updateChart();
+        }
+
+        function adjustMobileLayout() {
+            // Layout is static and consistent.
+        }
+        window.addEventListener('resize', adjustMobileLayout);
+
+        (function initThemeAndData() {
+            const savedTheme = localStorage.getItem('theme');
+            const savedBg = localStorage.getItem('histogram_bg') || (savedTheme === 'dark' ? '#2b2d42' : '#f8f9fa');
+            changeBgColor(savedBg);
+
+            const savedShowLabels = loadFromStorage('histogram_showLabels') === true;
+            document.getElementById("showLabelsToggle").checked = savedShowLabels;
+
+            const saved = loadFromStorage('histogram');
+            if (saved) {
+                if (saved.values) {
+                    const inputs = document.querySelectorAll("#inputs input");
+                    saved.values.forEach((v, i) => {
+                        if (i < inputs.length) inputs[i].value = v;
+                    });
+                }
+                if (saved.lsl !== undefined) document.getElementById("lslInput").value = saved.lsl;
+                if (saved.usl !== undefined) document.getElementById("uslInput").value = saved.usl;
+            }
+
+            updateChart();
+            adjustMobileLayout();
+
+            setTimeout(() => {
+                if (chartHistogram) {
+                    const isDark = document.body.classList.contains('dark-mode');
+                    applyDarkModeToChart(chartHistogram, isDark);
+                }
+            }, 100);
+        })();
+
+        async function exportFullPage() {
+            await exportPageAsPNG({
+                exportBtnId: 'exportBtn',
+                fileName: 'Laporan-Histogram-Sturges.png',
+                chartInstance: chartHistogram
+            });
+        }
+    </script>
+    <script src="/js/chatbot.js" defer></script>
+</body>
+
+</html>

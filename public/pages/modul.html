@@ -1,0 +1,3435 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modul Pembelajaran QCC Tools Interaktif</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/design-tokens.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layouts.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="../js/utils.js"></script>
+
+    <style>
+        .desktop-title,
+        .desktop-text {
+            display: inline;
+        }
+
+        .mobile-title,
+        .mobile-text {
+            display: none;
+        }
+
+        body,
+        .body-modul {
+            background: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            height: auto;
+            transition: background 0.3s, color 0.3s;
+            overflow-y: auto;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Container Utama Web App */
+        .main-app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            height: auto;
+            padding: 15px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 12px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            margin-right: 15px;
+        }
+
+        .btn-header {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .container {
+            display: flex;
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Sidebar Nav */
+        .sidebar {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+            position: sticky;
+            top: 15px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .nav-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(37, 127, 168, 0.3);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .module-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: 0.3s ease;
+        }
+
+        .module-section.active {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .mod-title {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-weight: 700;
+            border-bottom: 2px dashed var(--card-border);
+            padding-bottom: 8px;
+        }
+
+        .slide-container {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .slide.active-slide {
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .slide h3 {
+            font-size: 18px;
+            color: var(--text-main);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Controls */
+        .slide-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid var(--card-border);
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .slide-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            font-size: 13px;
+        }
+
+        .slide-btn:disabled {
+            background: var(--card-border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .slide-btn:not(:disabled):hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(37, 127, 168, 0.3);
+        }
+
+        .slide-dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--card-border);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dot.active {
+            width: 20px;
+            background: var(--primary);
+            transform: none;
+        }
+
+        /* Typography & Content Boxes */
+        .info-box {
+            background: var(--sim-bg);
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .info-box.success {
+            border-left-color: var(--success);
+        }
+
+        .info-box.warning {
+            border-left-color: var(--warning);
+        }
+
+        .info-box h4 {
+            font-size: 15px;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        .info-box p {
+            font-size: 13.5px;
+            color: var(--text-main);
+            line-height: 1.6;
+            text-align: justify;
+        }
+
+        /* Simulator Area */
+        .simulator-box {
+            background: var(--sim-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            margin-bottom: 15px;
+        }
+
+        .sim-controls {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .sim-controls p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .sim-btn-act {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sim-btn-act:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .sim-btn-act:active {
+            transform: scale(0.97);
+        }
+
+        .sim-btn-act.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(37, 127, 168, 0.2);
+        }
+
+        .sim-chart-container {
+            flex: 2;
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+            padding: 10px;
+            min-height: 250px;
+            position: relative;
+        }
+
+        /* Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+            margin-bottom: 20px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .comparison-table th {
+            background: rgba(37, 127, 168, 0.05);
+            color: var(--primary);
+            font-weight: 700;
+            width: 50%;
+        }
+
+        .comparison-table td {
+            color: var(--text-muted);
+            line-height: 1.6;
+            vertical-align: top;
+        }
+
+        .comparison-table ul {
+            padding-left: 15px;
+            margin-top: 5px;
+        }
+
+        .comparison-table li {
+            margin-bottom: 6px;
+        }
+
+        /* Buttons Action */
+        .action-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .btn-navigate {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(37, 127, 168, 0.2);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-navigate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(37, 127, 168, 0.4);
+            color: white;
+        }
+
+        .export-btn {
+            flex: 1;
+            background: var(--success);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #239e92;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 196, 182, 0.4);
+        }
+
+        /* Overlay Loading */
+        #pdf-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s;
+        }
+
+        #pdf-loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==============================================================
+           AREA CETAK (HANYA MUNCUL SAAT RENDER PDF / PRINT BROWSER) 
+           ============================================================== */
+        #print-area {
+            display: none;
+            background: white;
+            padding: 20px;
+            font-family: var(--font-family);
+        }
+
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
+        @media print {
+
+            /* Sembunyikan web app sepenuhnya */
+            .main-app-container,
+            #pdf-loading-overlay,
+            .bottom-nav,
+            .mobile-nav,
+            .sidebar,
+            .slide-controls,
+            .header-controls,
+            .no-print,
+            button {
+                display: none !important;
+            }
+
+            /* Tampilkan area cetak */
+            body {
+                background: white !important;
+                overflow: visible !important;
+                height: auto !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            #print-area {
+                display: block !important;
+                width: 277mm !important;
+                max-width: 277mm !important;
+                color: black !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            /* Paksa browser mencetak warna background */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Hindari elemen terpotong saat ganti kertas */
+            .avoid-break {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin-bottom: 25px;
+            }
+
+            #print-area img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            /* Halaman Sampul Premium (A4 Landscape) */
+            .print-cover {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 170mm;
+                /* Tinggi A4 landscape minus margin */
+                text-align: center;
+                border: 2px solid var(--primary);
+                border-radius: 16px;
+                padding: 30px;
+                box-sizing: border-box;
+                background-color: #ffffff;
+                position: relative;
+            }
+
+            .print-cover::before {
+                content: '';
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                border: 1px dashed rgba(37, 127, 168, 0.4);
+                border-radius: 12px;
+                pointer-events: none;
+            }
+
+            .print-cover-title {
+                font-size: 30px;
+                font-weight: 700;
+                color: var(--primary);
+                margin-top: 15px;
+                margin-bottom: 5px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                line-height: 1.2;
+            }
+
+            .print-cover-subtitle {
+                font-size: 16px;
+                font-weight: 500;
+                color: #4b5563;
+                margin-bottom: 20px;
+            }
+
+            .print-cover-decor {
+                width: 120px;
+                height: 5px;
+                background: linear-gradient(90deg, var(--primary), var(--secondary));
+                border-radius: 3px;
+                margin: 15px auto 20px auto;
+            }
+
+            .print-cover-meta {
+                margin-top: auto;
+                font-size: 12px;
+                color: #6b7280;
+                border-top: 1px solid #e2e8f0;
+                padding-top: 15px;
+                width: 70%;
+                line-height: 1.6;
+            }
+
+            .print-cover-meta strong {
+                color: #1f2937;
+            }
+
+            /* Tata Letak Dua Kolom (Side-by-Side) untuk Kamus Diagnosis */
+            .print-row {
+                display: flex;
+                gap: 25px;
+                margin-bottom: 25px;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                align-items: stretch;
+            }
+
+            .print-col-chart {
+                flex: 1;
+                border: 1px solid #cbd5e1;
+                border-radius: 10px;
+                padding: 12px;
+                background: #ffffff;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                max-width: 45%;
+            }
+
+            .print-col-chart img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+                border-radius: 4px;
+            }
+
+            .print-col-desc {
+                flex: 1.2;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            /* Print Formatting */
+            .print-card {
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                padding: 20px;
+                margin-bottom: 25px;
+                background-color: #ffffff;
+            }
+
+            /* Gaya Tabel Cetak yang Diperbaiki */
+            .print-table {
+                width: 100%;
+                margin-top: 15px;
+                font-size: 13px;
+            }
+
+            .print-table table,
+            table.comparison-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                margin-top: 10px !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+
+            .print-table th,
+            .print-table td,
+            table.comparison-table th,
+            table.comparison-table td {
+                border: 1px solid #cbd5e1 !important;
+                padding: 10px 12px !important;
+                text-align: left !important;
+                vertical-align: top !important;
+            }
+
+            .print-table th,
+            table.comparison-table th {
+                background-color: #f1f5f9 !important;
+                color: var(--primary) !important;
+                font-weight: 700 !important;
+            }
+        }
+
+        /* ===== FORCE DESKTOP VIEWPORT FOR CAPTURING CHART ON MOBILE ===== */
+        body.print-mode {
+            width: 1200px !important;
+            min-width: 1200px !important;
+            overflow: visible !important;
+        }
+
+        body.print-mode .main-app-container {
+            width: 1200px !important;
+            max-width: 1200px !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: 0 !important;
+            visibility: hidden !important;
+        }
+
+        body.print-mode .sim-chart-container {
+            width: 600px !important;
+            height: 350px !important;
+            flex: none !important;
+        }
+
+        body.print-mode .simulator-box {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 20px !important;
+        }
+
+        body.print-mode .sim-controls {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 !important;
+        }
+
+        @media screen and (max-width: 992px) {
+            body {
+                height: auto;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            .main-app-container {
+                height: auto;
+                min-height: 100vh;
+                padding: 10px;
+            }
+
+            .container {
+                flex-direction: column;
+                gap: 15px;
+                height: auto;
+            }
+
+            /* Desktop / Mobile Text Visibility */
+            .desktop-text {
+                display: none;
+            }
+
+            .mobile-text {
+                display: inline;
+            }
+
+            .desktop-title {
+                display: none !important;
+            }
+
+            .mobile-title {
+                display: inline !important;
+            }
+
+            /* Sidebar Nav as Scrollable Horizontal Tabs */
+            .sidebar {
+                width: 100%;
+                display: flex !important;
+                flex-direction: row !important;
+                background: rgba(0, 0, 0, 0.05);
+                padding: 8px 5px !important;
+                border-radius: 14px;
+                gap: 10px !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important;
+                white-space: nowrap !important;
+                flex-wrap: nowrap !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                position: relative !important;
+                height: auto !important;
+            }
+
+            body.dark-mode .sidebar {
+                background: rgba(255, 255, 255, 0.06);
+            }
+
+            .sidebar .nav-btn,
+            .nav-btn {
+                flex: 0 0 auto !important;
+                width: auto !important;
+                min-width: max-content !important;
+                justify-content: center;
+                text-align: center;
+                padding: 10px 18px !important;
+                font-size: 13px !important;
+                min-height: 44px;
+                /* Touch target */
+                border: none !important;
+                border-radius: 10px;
+                background: transparent;
+                color: var(--text-muted);
+                box-shadow: none;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                white-space: nowrap !important;
+            }
+
+            .nav-btn:hover {
+                transform: none;
+                border-color: transparent;
+            }
+
+            .nav-btn:active {
+                transform: scale(0.96);
+            }
+
+            .nav-btn.active {
+                background: var(--card-bg);
+                color: var(--primary);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            }
+
+            body.dark-mode .nav-btn.active {
+                color: #60a5fa;
+            }
+
+            .table-scroll-wrapper,
+            .responsive-table-wrapper {
+                width: 100%;
+                max-width: 100%;
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .slide-controls {
+                margin-bottom: 25px !important;
+            }
+
+            /* Content Area & Module Section */
+            .content-area {
+                height: auto;
+                min-height: 400px;
+                overflow: visible;
+                flex: none;
+                border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+                padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+            }
+
+            .main-app-container {
+                padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+            }
+
+            .module-section {
+                position: absolute;
+                /* Default state for inactive modules */
+                height: auto;
+                min-height: 100%;
+                padding: 15px;
+                overflow: visible;
+            }
+
+            .module-section.active {
+                position: relative;
+                /* Make active module flow naturally */
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            /* Slide & Slide Container */
+            .slide-container {
+                height: auto;
+                min-height: 0;
+                overflow: visible;
+            }
+
+            .slide {
+                position: absolute;
+                /* Inactive slides are absolute & hidden */
+                height: auto;
+                overflow: visible;
+                padding-right: 0;
+            }
+
+            .slide.active-slide {
+                position: relative;
+                /* Active slide flows naturally to expand parent height */
+                height: auto;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                overflow: visible;
+            }
+
+            /* Simulator Box */
+            .simulator-box {
+                flex-direction: column;
+                padding: 12px !important;
+                gap: 12px;
+            }
+
+            .sim-controls {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                gap: 8px;
+            }
+
+            .sim-btn-act {
+                justify-content: center;
+                text-align: center;
+            }
+
+            .sim-chart-container {
+                width: 100%;
+                min-height: 200px !important;
+                height: 200px !important;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+
+            /* Header Styling - Keep Single Line */
+            .desktop-title {
+                display: none;
+            }
+
+            .mobile-title {
+                display: inline;
+            }
+
+            header {
+                padding: 10px 15px;
+                border-radius: 10px;
+                margin-bottom: 12px;
+                gap: 10px;
+            }
+
+            .header-title {
+                font-size: 15px;
+            }
+
+            .btn-header {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+
+            .mod-title {
+                font-size: 20px;
+                padding-bottom: 6px;
+            }
+
+            .slide h3 {
+                font-size: 15px;
+            }
+
+            .info-box {
+                padding: 14px;
+                margin-bottom: 12px;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            }
+
+            .info-box h4 {
+                font-size: 14px;
+            }
+
+            .info-box p {
+                font-size: 12.5px;
+            }
+
+            /* Stacked Comparison Table with Grid Reordering into Comparative Cards */
+            .comparison-table,
+            .comparison-table tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                border: none !important;
+                background: transparent !important;
+            }
+
+            .comparison-table tr {
+                display: contents;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                display: block;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            /* First Card: Excel Manual */
+            .comparison-table tr:first-child th:nth-child(1) {
+                order: 1;
+                border: 1px solid var(--card-border) !important;
+                border-bottom: none !important;
+                border-radius: 12px 12px 0 0;
+                background: rgba(37, 127, 168, 0.08) !important;
+                color: var(--primary) !important;
+                padding: 12px 15px;
+                font-weight: 700;
+            }
+
+            .comparison-table tr:last-child td:nth-child(1) {
+                order: 2;
+                border: 1px solid var(--card-border) !important;
+                border-radius: 0 0 12px 12px;
+                background: var(--card-bg) !important;
+                padding: 15px;
+                margin-bottom: 5px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+                font-size: 12.5px;
+            }
+
+            /* Second Card: Web DX Platform */
+            .comparison-table tr:first-child th:nth-child(2) {
+                order: 3;
+                border: 1px solid var(--card-border) !important;
+                border-bottom: none !important;
+                border-radius: 12px 12px 0 0;
+                background: rgba(46, 196, 182, 0.08) !important;
+                color: var(--success) !important;
+                padding: 12px 15px;
+                font-weight: 700;
+                margin-top: 10px;
+            }
+
+            .comparison-table tr:last-child td:nth-child(2) {
+                order: 4;
+                border: 1px solid var(--card-border) !important;
+                border-radius: 0 0 12px 12px;
+                background: var(--card-bg) !important;
+                padding: 15px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+                font-size: 12.5px;
+            }
+
+            .comparison-table td ul {
+                padding-left: 12px;
+            }
+
+            .action-btns {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-navigate,
+            .export-btn {
+                width: 100%;
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .slide-controls {
+                margin-bottom: 25px !important;
+                /* safe spacing from bottom nav on smartphones */
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+
+            /* Grid for Simulator Buttons in Mobile Screen */
+            .sim-controls {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                width: 100%;
+            }
+
+            .sim-btn-act {
+                padding: 12px 10px;
+                font-size: 11.5px;
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                gap: 6px;
+                text-align: center;
+                border-radius: 8px;
+            }
+
+            /* Expand the odd last item to full width */
+            .sim-controls button:last-child:nth-child(odd) {
+                grid-column: span 2;
+            }
+        }
+
+        /* ==============================================================
+           TOP TAB SYSTEM STYLING
+           ============================================================== */
+        .top-tab-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 8px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .top-tab-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: transparent;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .top-tab-btn:hover {
+            color: var(--primary);
+            background: rgba(37, 127, 168, 0.06);
+        }
+
+        .top-tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(37, 127, 168, 0.3);
+        }
+
+        /* Tab panes */
+        .main-tab-pane {
+            display: none;
+            animation: fadeInTab 0.4s ease;
+        }
+
+        .main-tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Tab 2 (PDF Viewer Area) */
+        .pdf-viewer-container {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeInTab 0.4s ease;
+        }
+
+        .pdf-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed var(--card-border);
+            padding-bottom: 16px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pdf-title-area h2 {
+            font-size: 24px;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 0 0 6px 0;
+        }
+
+        .pdf-title-area p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .pdf-action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .pdf-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .pdf-btn-open {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(37, 127, 168, 0.2);
+        }
+
+        .pdf-btn-open:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(37, 127, 168, 0.35);
+        }
+
+        .pdf-btn-download {
+            background: var(--success);
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(46, 196, 182, 0.2);
+        }
+
+        .pdf-btn-download:hover {
+            background: #239e92;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 196, 182, 0.35);
+        }
+
+        .pdf-iframe-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+            background: #f1f5f9;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .pdf-iframe-wrapper iframe {
+            border: none;
+            display: block;
+        }
+
+        /* Dark mode adjustment for iframe wrapper background */
+        body.dark-mode .pdf-iframe-wrapper {
+            background: #1e293b;
+        }
+
+        @media screen and (max-width: 600px) {
+            .top-tab-container {
+                gap: 6px;
+                padding: 6px;
+                border-radius: 10px;
+                margin-bottom: 12px;
+            }
+
+            .top-tab-btn {
+                padding: 10px 12px;
+                font-size: 13px;
+                border-radius: 8px;
+                gap: 4px;
+            }
+
+            .pdf-viewer-container {
+                padding: 15px;
+                gap: 12px;
+            }
+
+            .pdf-title-area h2 {
+                font-size: 18px;
+            }
+
+            .pdf-title-area p {
+                font-size: 12px;
+            }
+
+            .pdf-action-buttons {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .pdf-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .pdf-iframe-wrapper iframe {
+                height: 500px !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="body-modul">
+
+    <div id="pdf-loading-overlay">
+        <div class="spinner"></div>
+        <h2 style="color:white; text-align:center;">Menyusun Modul Dokumen...</h2>
+        <p style="color:#cbd5e1; font-size:14px; margin-top:10px;">Mohon tunggu, sistem sedang menyiapkan setiap pola
+            diagram untuk diekspor.</p>
+    </div>
+
+    <div id="print-area"></div>
+
+    <div class="main-app-container">
+        <header class="qcc-header">
+            <div id="live-time" class="live-time">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span id="live-time-text">Memuat waktu...</span>
+            </div>
+            <div class="header-title">
+                <span class="desktop-title">Pembelajaran QCC</span>
+                <span class="mobile-title">📚 Modul QCC</span>
+            </div>
+            <div class="header-controls">
+                <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()"
+                    title="Ganti Tema">🌙</button>
+                <a href="../index.html" class="btn-header" title="Kembali ke Home">🏠</a>
+            </div>
+        </header>
+
+        <div class="top-tab-container">
+            <button class="top-tab-btn active" onclick="switchMainTab('tab-qc-tools', this)">
+                🛠️ 7 QC Tools
+            </button>
+            <button class="top-tab-btn" onclick="switchMainTab('tab-8-steps', this)">
+                📋 8 Steps Meetings
+            </button>
+        </div>
+
+        <!-- Tab 1: 7 QC Tools -->
+        <div id="tab-qc-tools" class="main-tab-pane active">
+            <div class="container">
+                <div class="sidebar">
+                    <button class="nav-btn active" onclick="openModule('dasar')">
+                        <span class="desktop-text">💡 Dasar QCC & PDCA</span>
+                        <span class="mobile-text">💡 Dasar</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('scatter')">
+                        <span class="desktop-text">📈 Scatter Diagram</span>
+                        <span class="mobile-text">📈 Scatter</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('histogram')">
+                        <span class="desktop-text">📊 Histogram Data</span>
+                        <span class="mobile-text">📊 Histogram</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('control')">
+                        <span class="desktop-text">📉 Control Chart</span>
+                        <span class="mobile-text">📉 Kontrol</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('pareto')">
+                        <span class="desktop-text">📊 Pareto Diagram</span>
+                        <span class="mobile-text">📊 Pareto</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('checksheet')">
+                        <span class="desktop-text">📋 Check Sheet</span>
+                        <span class="mobile-text">📋 Check Sheet</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('fishbone')">
+                        <span class="desktop-text">🐟 Fishbone Diagram</span>
+                        <span class="mobile-text">🐟 Fishbone</span>
+                    </button>
+                    <button class="nav-btn" onclick="openModule('stratifikasi')">
+                        <span class="desktop-text">🗂️ Stratifikasi</span>
+                        <span class="mobile-text">🗂️ Stratifikasi</span>
+                    </button>
+                </div>
+
+                <div class="content-area">
+
+                    <div id="dasar" class="module-section active">
+                        <h2 class="mod-title">Dasar QCC & PDCA</h2>
+
+                        <div class="slide-container" id="slide-dasar">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Apa itu QCC?</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Pengertian QCC (Quality Control Circle)</h4>
+                                        <p><b>QCC atau Gugus Kendali Mutu (GKM)</b> adalah kelompok kecil karyawan
+                                            (biasanya 3-8 orang) dari area kerja yang sama, yang secara bersama-sama
+                                            berkumpul secara rutin untuk mencari masalah di lapangan, menganalisis
+                                            penyebabnya, melakukan perbaikan, dan menjaga hasil perbaikan agar tidak
+                                            kembali lagi.<br><br>
+                                            QCC bukan sekadar ajang perlombaan presentasi, melainkan <b>cara kerja
+                                                problem solving sehari-hari di lantai produksi (gemba)</b>.</p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Karakteristik & Tujuan Utama</h4>
+                                        <p>• <b>Dekat dengan Proses</b>: Dilakukan langsung oleh operator yang
+                                            sehari-hari menjalankan mesin atau lini perakitan.
+                                            <br>• <b>Masalah Mandiri</b>: Masalah yang diselesaikan diambil dari area
+                                            kerja sendiri, bukan titipan atasan.
+                                            <br>• <b>Tujuan QCC</b>:
+                                            <br>&nbsp;&nbsp;1. Meningkatkan <b>Kualitas (Quality)</b> produk.
+                                            <br>&nbsp;&nbsp;2. Menjaga <b>Keselamatan (Safety)</b> kerja.
+                                            <br>&nbsp;&nbsp;3. Meningkatkan <b>Produktivitas (Cost/Delivery)</b>.
+                                            <br>&nbsp;&nbsp;4. Menciptakan area kerja yang <b>Nyaman & Rapi
+                                                (5S/Morale)</b>.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🔄 Slide 2: Siklus PDCA (Pilar Improvement)</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu PDCA?</h4>
+                                        <p>PDCA adalah siklus berkelanjutan untuk menyelesaikan masalah dan meningkatkan
+                                            standar kerja di pabrik. Siklus ini terdiri dari 4 tahapan utama:</p>
+                                        <div
+                                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                            <div
+                                                style="background: rgba(37, 127, 168, 0.05); padding: 8px; border-radius: 6px; border-left: 3px solid var(--primary);">
+                                                <strong style="color: var(--primary); font-size: 12.5px;">1. PLAN
+                                                    (Rencanakan)</strong>
+                                                <p
+                                                    style="font-size: 11px; margin: 3px 0 0 0; color: var(--text-muted);">
+                                                    Memilih masalah, mencari akar penyebab, dan merancang rencana
+                                                    perbaikan.</p>
+                                            </div>
+                                            <div
+                                                style="background: rgba(76, 175, 80, 0.05); padding: 8px; border-radius: 6px; border-left: 3px solid var(--success);">
+                                                <strong style="color: var(--success); font-size: 12.5px;">2. DO
+                                                    (Laksanakan)</strong>
+                                                <p
+                                                    style="font-size: 11px; margin: 3px 0 0 0; color: var(--text-muted);">
+                                                    Menjalankan rencana perbaikan di lapangan (uji coba skala kecil).
+                                                </p>
+                                            </div>
+                                            <div
+                                                style="background: rgba(245, 158, 11, 0.05); padding: 8px; border-radius: 6px; border-left: 3px solid var(--warning);">
+                                                <strong style="color: var(--warning); font-size: 12.5px;">3. CHECK
+                                                    (Periksa)</strong>
+                                                <p
+                                                    style="font-size: 11px; margin: 3px 0 0 0; color: var(--text-muted);">
+                                                    Mengukur hasil perbaikan. Apakah cacat berkurang? Apakah target
+                                                    tercapai?</p>
+                                            </div>
+                                            <div
+                                                style="background: rgba(239, 35, 60, 0.05); padding: 8px; border-radius: 6px; border-left: 3px solid var(--danger);">
+                                                <strong style="color: var(--danger); font-size: 12.5px;">4. ACT (Tindak
+                                                    Lanjut)</strong>
+                                                <p
+                                                    style="font-size: 11px; margin: 3px 0 0 0; color: var(--text-muted);">
+                                                    Membuat SOP baru agar masalah tidak terulang, lalu lanjut ke siklus
+                                                    berikutnya.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🏭 Contoh PDCA di Lantai Pabrik</h4>
+                                        <p>• <b>Plan</b>: Kita melihat cacat goresan tinggi di Lini A. Kita analisa
+                                            penyebabnya karena gesekan conveyor, lalu merencanakan pasang karet
+                                            pelindung.
+                                            <br>• <b>Do</b>: Kita pasang karet pelindung pada conveyor Lini A.
+                                            <br>• <b>Check</b>: Kita ukur data cacat selama 1 minggu. Hasilnya cacat
+                                            goresan turun dari 50 kasus menjadi 2 kasus.
+                                            <br>• <b>Act</b>: Kita buat SOP pemasangan karet pelindung dan jadwalkan
+                                            pengecekannya di check sheet preventive maintenance.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>📋 Slide 3: 8 Langkah Problem Solving & Hubungannya dengan 7 QC Tools</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card" style="border-left-color: var(--primary);">
+                                        <h4>🛠️ 8 Langkah Problem Solving (Delapan Langkah QCC)</h4>
+                                        <p>Siklus PDCA dijalankan secara sistematis menggunakan 8 langkah berikut
+                                            beserta alat bantunya:</p>
+                                        <div
+                                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-top: 8px; font-size: 11.5px; margin-bottom: 12px;">
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>1. Tentukan Tema Masalah</b> (Alat: <i>Pareto, Check Sheet</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>2. Pahami Kondisi Saat Ini</b> (Alat: <i>Histogram, Stratifikasi</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>3. Tetapkan Target Perbaikan</b> (Alat: <i>Garis Target/Smart
+                                                    Target</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>4. Cari Akar Penyebab</b> (Alat: <i>Fishbone, Scatter Diagram</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>5. Rencanakan Penanggulangan</b> (Alat: <i>5W+1H Plan Table</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>6. Laksanakan Penanggulangan</b> (Alat: <i>Action/Trial Log</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>7. Cek Hasil Perbaikan</b> (Alat: <i>Pareto Sebelum vs Sesudah</i>)
+                                            </div>
+                                            <div
+                                                style="padding: 4px 8px; background: var(--sim-bg); border-radius: 4px;">
+                                                <b>8. Standarisasi & Rencana Baru</b> (Alat: <i>SOP, Control Chart</i>)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🛠️ Slide 4: Kapan Menggunakan QC Tools?</h3>
+                                <div class="theory-content">
+                                    <div class="info-box success detail-card">
+                                        <h4>💡 Panduan Cepat Pilih Alat (QC Tools Selector)</h4>
+                                        <p>Gunakan rangkuman di bawah ini sebagai contekan di lapangan saat memimpin tim
+                                            QCC:</p>
+                                        <div
+                                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-top: 10px; font-size: 12px; margin-bottom: 12px;">
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid var(--primary);">
+                                                <b>📋 Check Sheet</b>: Saat mau mengumpulkan data cacat secara jujur dan
+                                                real-time di stasiun kerja.
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #e53e3e;">
+                                                <b>📊 Pareto Diagram</b>: Saat mau mengetahui 1 atau 2 masalah terbesar
+                                                yang menyumbang 80% reject.
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #dd6b20;">
+                                                <b>🐟 Fishbone Diagram</b>: Saat sedang brainstorming mencari semua
+                                                kemungkinan penyebab (4M1E) bersama operator.
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #319795;">
+                                                <b>🗂️ Stratifikasi</b>: Saat data global campur aduk dan mau memilahnya
+                                                (misal per shift atau per mesin) agar anomali terlihat jelas.
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #3182ce;">
+                                                <b>📈 Scatter Diagram</b>: Saat mau membuktikan hubungan sebab-akibat
+                                                antara penyebab (X) vs akibat (Y) dengan data nyata.
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #4a5568;">
+                                                <b>📊 Histogram</b>: Saat mau melihat sebaran ukuran produk (apakah
+                                                menumpuk di tengah, melebar, atau mendekati batas reject).
+                                            </div>
+                                            <div
+                                                style="padding: 8px; background: var(--sim-bg); border-radius: 6px; border-left: 3px solid #38a169;">
+                                                <b>📉 Control Chart</b>: Saat mau memantau kestabilan mesin dari jam ke
+                                                jam agar terhindar dari salah setel mesin (tampering).
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="table-content" style="display: none;">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Tanpa Metode QCC (Insting/Tebakan)</th>
+                                            <th>Menggunakan Metode QCC & PDCA</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Masalah diselesaikan berdasarkan insting atau tebakan
+                                                        operator/atasan, seringkali salah sasaran.</li>
+                                                    <li>Perbaikan bersifat sementara; setelah beberapa minggu, masalah
+                                                        yang sama muncul kembali.</li>
+                                                    <li>Saling menyalahkan antar shift atau lini kerja saat terjadi
+                                                        defect produksi.</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Masalah diselidiki secara terstruktur menggunakan data riil
+                                                        lapangan (fakta genba).</li>
+                                                    <li>Perbaikan dikunci menggunakan Standar Operasional Prosedur (SOP)
+                                                        baru agar tidak terulang.</li>
+                                                    <li>Kerjasama tim yang solid untuk menganalisis sistem kerja secara
+                                                        objektif.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="action-btns">
+                                    <a href="../index.html" class="btn-navigate">🏠 Kembali ke Dashboard Utama</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('dasar', 'Modul_Dasar_QCC_PDCA')">📄 Download Modul
+                                        Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('dasar', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-dasar">
+                                <div class="dot active" onclick="goToSlide('dasar', 0)"></div>
+                                <div class="dot" onclick="goToSlide('dasar', 1)"></div>
+                                <div class="dot" onclick="goToSlide('dasar', 2)"></div>
+                                <div class="dot" onclick="goToSlide('dasar', 3)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('dasar', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="scatter" class="module-section">
+                        <h2 class="mod-title">Scatter Diagram (Diagram Pencar)</h2>
+
+                        <div class="slide-container" id="slide-scatter">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Scatter Diagram</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Scatter Diagram?</h4>
+                                        <p>Scatter Diagram (Diagram Pencar) digunakan untuk <b>melihat hubungan antara
+                                                dua hal di pabrik</b> (apakah satu hal memengaruhi hal lainnya). Alat
+                                            ini membantu kita membuktikan kecurigaan dengan data riil berdasarkan bukti
+                                            nyata di lapangan (empiris), bukan sekadar tebakan atau perasaan
+                                            (feeling).<br><br>
+                                            Pada grafik:
+                                            <br>• <b>Sumbu Mendatar (X)</b>: Parameter yang kita duga sebagai <b>Faktor
+                                                Penyebab / Variabel Bebas</b> (misal: suhu oven, tekanan mesin clamp,
+                                            atau kecepatan mesin).
+                                            <br>• <b>Sumbu Tegak (Y)</b>: Hasil yang terkena dampak atau <b>Faktor
+                                                Akibat / Variabel Terikat</b> (misal: jumlah produk penyok, dimensi
+                                            produk, atau jumlah produk defect/cacat).
+                                            <br><br>
+                                            <b>Contoh di Pabrik:</b> Kita curiga bahwa "suhu oven yang terlalu panas"
+                                            (X) membuat "produk menjadi penyok" (Y). Daripada berdebat tanpa bukti, kita
+                                            kumpulkan data suhu oven dan jumlah produk penyok, lalu gambarkan dalam
+                                            grafik ini. Pola sebaran titik akan menjawab kecurigaan kita secara ilmiah.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Cara Membaca & Tindakan Lapangan</h4>
+                                        <p>Alat ini menggunakan angka kekuatan hubungan yang disebut <b>Koefisien
+                                                Korelasi (r)</b>:
+                                            <br>• Jika titik-titik berkumpul membentuk pola garis miring yang jelas
+                                            (nilai <i>r</i> mendekati 1 atau -1), artinya <b>ada hubungan sebab-akibat
+                                                (korelasi) yang kuat</b>.
+                                            <br>• Jika titik-titik menyebar acak (nilai <i>r</i> mendekati 0), artinya
+                                            <b>kedua variabel tidak berhubungan</b>.
+                                            <br><br>
+                                            <b>Tindakan Lapangan:</b> Jika terbukti ada hubungan kuat (misal suhu oven
+                                            vs produk penyok), segera buat standar baru untuk mengunci parameter suhu
+                                            oven di angka yang aman. Jika tidak terbukti berhubungan, jangan buang waktu
+                                            menyetel mesin di parameter tersebut, melainkan cari penyebab lain di lantai
+                                            produksi.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🕹️ Slide 2: Analisis Pola Diagram & Simulasi</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Klik
+                                    tombol simulasi di bawah ini untuk mempelajari bagaimana bentuk pola titik
+                                    menyampaikan makna korelasi.</p>
+                                <div class="simulator-box">
+                                    <div class="sim-controls">
+                                        <button class="sim-btn-act active"
+                                            onclick="updateScatterSim('positif', this)">Korelasi Positif (Searah)
+                                            <span>↗️</span></button>
+                                        <button class="sim-btn-act" onclick="updateScatterSim('negatif', this)">Korelasi
+                                            Negatif (Terbalik) <span>↘️</span></button>
+                                        <button class="sim-btn-act" onclick="updateScatterSim('acak', this)">Tidak
+                                            Berkorelasi (Acak) <span>🌌</span></button>
+                                    </div>
+                                    <div class="sim-chart-container"><canvas id="simScatterChart"></canvas></div>
+                                </div>
+                                <div class="info-box warning desc-box-sim" id="desc-scatter">
+                                    <h4>↗️ Makna Korelasi Positif</h4>
+                                    <p>Titik-titik mengelompok dan miring ke arah kanan atas. Artinya <b>Berbanding
+                                            Lurus</b>. Ibarat pedal gas mobil, semakin dalam diinjak (X naik), maka
+                                        kecepatan akan makin bertambah (Y naik).</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Panduan Pembuatan (Manual vs Sistem)</h3>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Membuat Secara Manual (Excel)</th>
+                                            <th>Menggunakan DX Platform (Web Ini)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Ketik data Penyebab (X) di kolom kiri dan Akibat (Y) di kolom
+                                                        kanan pada sheet.</li>
+                                                    <li>Blok kedua data, lalu pilih menu <b>Insert > Scatter Plot</b>.
+                                                    </li>
+                                                    <li>Untuk menganalisis, klik kanan pada titik-titik lalu pilih
+                                                        <b>Add Trendline</b>.
+                                                    </li>
+                                                    <li>Centang <i>"Display Equation on chart"</i> untuk memunculkan
+                                                        rumus regresi. Sayangnya, Anda harus menafsirkan arti angka
+                                                        tersebut sendiri.</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Buka menu alat <b>Scatter Diagram</b> melalui Dashboard.</li>
+                                                    <li>Salin (Copy) puluhan data dari Excel dan Tempel (Paste) langsung
+                                                        ke dalam kotak input web.</li>
+                                                    <li>Sistem akan langsung menggambar grafik secara <i>real-time</i>,
+                                                        menghitung kekuatan korelasi, dan otomatis memberikan
+                                                        <b>Kesimpulan Diagnostik (RCA)</b>.
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="scatter.html" class="btn-navigate">🚀 Praktek Tool Scatter Diagram</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('scatter', 'Modul_Scatter_Diagram')">📄 Download
+                                        Modul Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('scatter', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-scatter">
+                                <div class="dot active" onclick="goToSlide('scatter', 0)"></div>
+                                <div class="dot" onclick="goToSlide('scatter', 1)"></div>
+                                <div class="dot" onclick="goToSlide('scatter', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('scatter', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="histogram" class="module-section">
+                        <h2 class="mod-title">Histogram</h2>
+
+                        <div class="slide-container" id="slide-histogram">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Histogram</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Histogram?</h4>
+                                        <p>Histogram adalah grafik balok yang digunakan untuk <b>melihat sebaran ukuran
+                                                hasil produksi kita (himpunan data numerik)</b>. Grafik ini
+                                            menggambarkan apakah produk yang kita buat ukurannya konsisten atau malah
+                                            acak-acakan.<br><br>
+                                            <b>Contoh di Pabrik:</b> Kita mengukur diameter lubang (hole), berat produk,
+                                            atau ketebalan plat dari 100 sampel. Dari grafik ini kita bisa melihat
+                                            apakah data ukuran tersebut:
+                                            <br>• <b>Menumpuk di tengah</b>: Bagus, artinya ukuran produk seragam
+                                            mendekati target.
+                                            <br>• <b>Melebar lebar</b>: Bahaya, artinya variasi ukuran mesin tidak
+                                            stabil.
+                                            <br>• <b>Miring/menceng ke kiri atau kanan</b>: Bergeser dari target
+                                            nominal.
+                                            <br>• <b>Mendekati batas NG (LSL / Batas Bawah Toleransi atau USL / Batas
+                                                Atas Toleransi)</b>: Berisiko tinggi menghasilkan produk reject.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Kapabilitas Mesin (Cp & Cpk) & Tindakan Lapangan</h4>
+                                        <p>Grafik ini membantu kita menghitung <b>Indeks Kapabilitas Proses (Cp &
+                                                Cpk)</b>, yaitu angka penanda apakah mesin kita sanggup memproduksi
+                                            barang sesuai toleransi yang diminta pelanggan. Angka standar aman biasanya
+                                            di atas 1.33.<br><br>
+                                            <b>Tindakan Lapangan:</b>
+                                            <br>• Jika grafik gunungnya <b>ramping dan menumpuk di tengah</b> (Cp/Cpk >=
+                                            1.33), teruskan SOP kerja dan rawat mesin secara terjadwal.
+                                            <br>• Jika grafik gunungnya <b>melebar atau mendekati batas NG</b>, segera
+                                            lakukan kalibrasi ulang mesin, periksa keausan alat pemotong, atau setel
+                                            ulang parameter mesin agar variasi ukuran menyusut.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🕹️ Slide 2: Diagnosis Bentuk Gunung (Simulasi)</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Bentuk
+                                    gundukan data mengidentifikasikan "Penyakit" fisik yang sedang dialami mesin.</p>
+                                <div class="simulator-box">
+                                    <div class="sim-controls">
+                                        <button class="sim-btn-act active"
+                                            onclick="updateHistSim('normal', this)">Lonceng Sempurna (Normal)
+                                            <span>🔔</span></button>
+                                        <button class="sim-btn-act"
+                                            onclick="updateHistSim('menceng', this)">Bergeser/Menceng (Skewed)
+                                            <span>🏔️</span></button>
+                                        <button class="sim-btn-act" onclick="updateHistSim('bimodal', this)">Dua Puncak
+                                            (Bimodal) <span>🐫</span></button>
+                                    </div>
+                                    <div class="sim-chart-container"><canvas id="simHistChart"></canvas></div>
+                                </div>
+                                <div class="info-box warning desc-box-sim" id="desc-histogram">
+                                    <h4>🔔 Makna Lonceng Sempurna (Normal)</h4>
+                                    <p>Gunung tinggi dan ramping tepat di tengah. Artinya <b>Proses Sangat Sehat</b>.
+                                        Variasi produk kecil (seragam) dan presisi mengenai target. Pertahankan SOP!</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Panduan Pembuatan (Manual vs Sistem)</h3>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Membuat Secara Manual (Excel)</th>
+                                            <th>Menggunakan DX Platform (Web Ini)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Cari nilai Maximum, Minimum, dan selisihnya (Range) dari ratusan
+                                                        data.</li>
+                                                    <li>Gunakan "Aturan Sturges" (Rumus Logaritma: 1 + 3.322 log(n))
+                                                        secara manual di kalkulator untuk menentukan jumlah pembagian
+                                                        balok.</li>
+                                                    <li>Gunakan fitur <b>Data Analysis Toolpak</b> untuk memisahkan
+                                                        frekuensi data.</li>
+                                                    <li>Nilai Kapabilitas Mesin (Cp/Cpk) harus Anda hitung mandiri
+                                                        menggunakan rumus Standar Deviasi (Sigma).</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Buka alat <b>Histogram</b> di Dashboard web.</li>
+                                                    <li>Tempel ratusan data hasil ukur dimensi ke dalam kotak input.
+                                                    </li>
+                                                    <li>Sistem algoritma akan langsung menggambar grafik gunung secara
+                                                        otomatis, menarik garis LSL/USL, dan <b>Menghitung Skor Cpk
+                                                            secara instan untuk menyatakan status kelayakan mesin
+                                                            (Aman/Reject)</b>.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="histogram.html" class="btn-navigate">🚀 Praktek Tool Histogram</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('histogram', 'Modul_Histogram')">📄 Download Modul
+                                        Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('histogram', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-histogram">
+                                <div class="dot active" onclick="goToSlide('histogram', 0)"></div>
+                                <div class="dot" onclick="goToSlide('histogram', 1)"></div>
+                                <div class="dot" onclick="goToSlide('histogram', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('histogram', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="control" class="module-section">
+                        <h2 class="mod-title">Control Chart (Peta Kendali)</h2>
+
+                        <div class="slide-container" id="slide-control">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Control Chart</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Control Chart?</h4>
+                                        <p>Control Chart (Peta Kendali) adalah alat pemantau kestabilan mesin dari waktu
+                                            ke waktu. Analogi sederhananya seperti menyetir mobil di jalan tol: kita
+                                            berkendara di tengah (<b>Center Line / CL</b>). Wajar jika mobil agak serong
+                                            sedikit ke kiri/kanan selama masih di dalam marka batas aman (<b>UCL / Batas
+                                                Atas</b> & <b>LCL / Batas Bawah</b>). Jika keluar dari batas ini,
+                                            berarti bahaya!<br><br>
+                                            Grafik ini membedakan dua jenis variasi penyebab penyimpangan ukuran:
+                                            <br>• <b>Common Cause (Penyebab Umum/Wajar)</b>: Variasi kecil yang alami
+                                            karena faktor lingkungan, getaran halus mesin, dll. Selama data masih di
+                                            dalam batas UCL & LCL secara acak, proses dinilai aman.
+                                            <br>• <b>Special Cause (Penyebab Khusus/Tidak Wajar)</b>: Gangguan tidak
+                                            wajar yang merusak proses dan perlu investigasi segera. Contohnya: pahat
+                                            longgar, sensor kotor, atau material salah jenis.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Bahaya "Tampering" & Tindakan Lapangan</h4>
+                                        <p>• <b>Tampering (Panik Menyetel Mesin)</b> adalah tindakan salah di mana
+                                            operator terburu-buru mengubah setingan mesin padahal variasi ukuran produk
+                                            masih wajar/alami (Common Cause). Tindakan ini justru membuat mesin semakin
+                                            tidak stabil.
+                                            <br><br>
+                                            <b>Tindakan Lapangan:</b>
+                                            <br>• Jika titik-titik data bergerak acak dan masih di dalam batas UCL &
+                                            LCL, <b>jangan ubah setingan mesin Anda!</b> Biarkan mesin berjalan.
+                                            <br>• Jika ada titik keluar dari batas UCL/LCL atau membentuk pola tidak
+                                            wajar (Special Cause), segera hentikan mesin, lakukan investigasi (cek
+                                            sensor kotor, kencangkan pahat yang longgar, atau cek material), lalu
+                                            perbaiki sebelum lanjut produksi.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🕹️ Slide 2: Deteksi Penyakit Proses & Simulasi</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Kenali 3
+                                    penyakit utama (Special Cause) dengan menyuntikkan masalah pada simulasi di bawah
+                                    ini.</p>
+                                <div class="simulator-box">
+                                    <div class="sim-controls">
+                                        <button class="sim-btn-act active"
+                                            onclick="updateCtrlSim('normal', this)">Stabil Alami (In Control)
+                                            <span>✅</span></button>
+                                        <button class="sim-btn-act" onclick="updateCtrlSim('outlier', this)">Suntik
+                                            Titik Ekstrem (Outlier) <span>⚠️</span></button>
+                                        <button class="sim-btn-act" onclick="updateCtrlSim('shift', this)">Suntik
+                                            Pergeseran (Shift) <span>〰️</span></button>
+                                        <button class="sim-btn-act" onclick="updateCtrlSim('trend', this)">Suntik Pola
+                                            Naik (Trend) <span>📈</span></button>
+                                    </div>
+                                    <div class="sim-chart-container"><canvas id="simCtrlChart"></canvas></div>
+                                </div>
+                                <div class="info-box warning desc-box-sim" id="desc-control">
+                                    <h4>✅ Stabil Alami (In Control)</h4>
+                                    <p>Titik-titik bergerak zig-zag acak di sekitar garis tengah (CL). <b>Tindakan:</b>
+                                        JANGAN diutak-atik! Ini adalah suara natural mesin.</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Panduan Pembuatan (Manual vs Sistem)</h3>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Membuat Secara Manual (Excel)</th>
+                                            <th>Menggunakan DX Platform (Web Ini)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Hitung rata-rata tiap kelompok data dari sampel inspeksi harian.
+                                                    </li>
+                                                    <li>Buka tabel referensi statistik tebal untuk mencari nilai
+                                                        konstanta A2, D3, D4 demi menghitung batas simpangan UCL dan LCL
+                                                        secara manual.</li>
+                                                    <li>Setelah grafik selesai dibuat, Anda harus <b>memelototi</b>
+                                                        titik grafiknya dengan mata kepala sendiri untuk mengecek apakah
+                                                        ada pelanggaran (misal: 7 titik beruntun di atas CL atau 6 titik
+                                                        beruntun naik tanpa jeda).</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Buka alat <b>Control Chart</b> di halaman Dashboard.</li>
+                                                    <li>Masukkan angka target CL, UCL, dan LCL, lalu tempel data aliran
+                                                        inspeksi yang sedang berjalan.</li>
+                                                    <li><b>Keunggulan Mutlak:</b> Sistem DX ini dilengkapi dengan
+                                                        <b>Algoritma Pendeteksi Pola (Western Electric Rules)</b>! Jika
+                                                        ada rangkaian titik yang melanggar hukum statistik, layar akan
+                                                        seketika memunculkan kotak Peringatan RCA otomatis.
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="control-chart.html" class="btn-navigate">🚀 Praktek Tool Control Chart</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('control', 'Modul_Control_Chart')">📄 Download Modul
+                                        Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('control', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-control">
+                                <div class="dot active" onclick="goToSlide('control', 0)"></div>
+                                <div class="dot" onclick="goToSlide('control', 1)"></div>
+                                <div class="dot" onclick="goToSlide('control', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('control', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="pareto" class="module-section">
+                        <h2 class="mod-title">Diagram Pareto</h2>
+
+                        <div class="slide-container" id="slide-pareto">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Diagram Pareto</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Diagram Pareto?</h4>
+                                        <p>Diagram Pareto adalah grafik batang yang mengurutkan jenis masalah dari yang
+                                            paling sering terjadi sampai yang paling jarang. Tujuannya adalah agar kita
+                                            tahu <b>masalah terbesar mana yang harus diselesaikan terlebih dahulu</b>
+                                            (skala prioritas).<br><br>
+                                            Alat ini menggunakan hukum <b>Prinsip Pareto (Hukum 80/20)</b>:
+                                            <br>• <b>Vital Few (Sedikit yang Penting)</b>: 80% cacat di pabrik biasanya
+                                            dipicu oleh hanya 20% jenis masalah (cukup fokus ke balok tertinggi ke-1 dan
+                                            ke-2 saja).
+                                            <br>• <b>Trivial Many (Banyak yang Remeh)</b>: Sisanya adalah
+                                            masalah-masalah kecil di ujung kanan grafik yang jarang terjadi.
+                                            <br><br>
+                                            <b>Contoh di Pabrik:</b> Jika ada 10 jenis cacat produk di lini perakitan,
+                                            kita tidak perlu memusingkan semuanya. Dengan Diagram Pareto, kita akan
+                                            melihat bahwa cacat "Goresan" dan "Penyok" (balok ke-1 dan ke-2) menyumbang
+                                            80% dari total reject. Menyelesaikan dua masalah utama ini akan langsung
+                                            memulihkan kualitas produk secara drastis.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Cara Membaca & Tindakan Lapangan</h4>
+                                        <p>Gunakan garis akumulasi persentase (garis lengkung di atas balok) untuk
+                                            menemukan titik 80%:
+                                            <br>• Carilah jenis cacat yang berada di sebelah kiri batas 80% kumulatif
+                                            (biasanya balok tertinggi ke-1 dan ke-2 yang paling berdampak).
+                                            <br><br>
+                                            <b>Tindakan Lapangan:</b> Pusatkan seluruh tim QCC dan energi perbaikan
+                                            untuk mencari akar penyebab 1 atau 2 masalah terbesar tersebut terlebih
+                                            dahulu. <b>Jangan habiskan energi untuk masalah kecil di ujung kanan
+                                                dulu</b> sebelum masalah utama selesai.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🕹️ Slide 2: Prioritas & Simulasi Data</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Pelajari
+                                    dampak konsentrasi masalah pada Diagram Pareto melalui tombol simulasi di bawah.</p>
+                                <div class="simulator-box">
+                                    <div class="sim-controls">
+                                        <button class="sim-btn-act active"
+                                            onclick="updateParetoSim('dominan', this)">Cacat Dominan (Vital Few)
+                                            <span>🎯</span></button>
+                                        <button class="sim-btn-act" onclick="updateParetoSim('merata', this)">Distribusi
+                                            Merata (Flat) <span>🏔️</span></button>
+                                        <button class="sim-btn-act" onclick="updateParetoSim('ekstrem', this)">Penyebab
+                                            Tunggal Ekstrem <span>🔥</span></button>
+                                    </div>
+                                    <div class="sim-chart-container"><canvas id="simParetoChart"></canvas></div>
+                                </div>
+                                <div class="info-box warning desc-box-sim" id="desc-pareto">
+                                    <h4>🎯 Pola Cacat Dominan (Vital Few)</h4>
+                                    <p>Sekitar 85% masalah disumbangkan oleh 2 kategori saja (Goresan & Penyok). Fokus
+                                        tindakan perbaikan pada 2 masalah dominan ini akan langsung memangkas mayoritas
+                                        kegagalan kualitas.</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Panduan Pembuatan (Manual vs Sistem)</h3>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Membuat Secara Manual (Excel)</th>
+                                            <th>Menggunakan DX Platform (Web Ini)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Urutkan tabel data kategori cacat dari frekuensi terbesar ke
+                                                        terkecil.</li>
+                                                    <li>Tambahkan kolom persentase kumulatif dengan rumus: (Jumlah
+                                                        Berjalan / Total Keseluruhan) x 100%.</li>
+                                                    <li>Blok data kategori, frekuensi, dan persentase kumulatif, lalu
+                                                        buat grafik bertumpuk.</li>
+                                                    <li>Ubah jenis diagram seri persentase kumulatif menjadi grafik
+                                                        garis (Line) dan aktifkan opsi <b>Secondary Axis</b> (Sumbu
+                                                        Kanan) secara manual di Excel.</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Buka alat <b>Pareto Diagram</b> di Dashboard web.</li>
+                                                    <li>Salin tabel frekuensi cacat dari Excel, lalu tempelkan langsung
+                                                        ke kotak input data web.</li>
+                                                    <li>Sistem secara otomatis mengurutkan frekuensi, menghitung
+                                                        persentase kumulatif secara real-time, menggambar grafik mixed
+                                                        sumbu ganda, serta **langsung menandai daerah prioritas
+                                                        perbaikan (Vital Few)**.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="pareto.html" class="btn-navigate">🚀 Praktek Tool Pareto Diagram</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('pareto', 'Modul_Diagram_Pareto')">📄 Download Modul
+                                        Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('pareto', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-pareto">
+                                <div class="dot active" onclick="goToSlide('pareto', 0)"></div>
+                                <div class="dot" onclick="goToSlide('pareto', 1)"></div>
+                                <div class="dot" onclick="goToSlide('pareto', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('pareto', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="checksheet" class="module-section">
+                        <h2 class="mod-title">Check Sheet (Lembar Periksa)</h2>
+
+                        <div class="slide-container" id="slide-checksheet">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Check Sheet</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Check Sheet?</h4>
+                                        <p>Check Sheet (Lembar Periksa) adalah lembar formulir sederhana yang dirancang
+                                            khusus untuk mempermudah pencatatan data cacat atau inspeksi di lapangan
+                                            secara cepat dan teratur.<br><br>
+                                            <b>Aturan Emas Pencatatan:</b>
+                                            <br>• <b>Data Harus Dicatat Jujur Saat Kejadian</b>: Setiap menemukan produk
+                                            defect, langsung coret/tulis di check sheet saat itu juga di lantai
+                                            produksi.
+                                            <br>• <b>Jangan Mengisi Borongan di Akhir Shift</b>: Mengisi data di akhir
+                                            shift berdasarkan ingatan/perkiraan sangat berbahaya karena data pasti tidak
+                                            akurat. <b>Data palsu akan membuat analisis Pareto salah arah!</b> (disebut
+                                            <i>Garbage In, Garbage Out</i> - jika sampah yang dimasukkan, sampah pula
+                                            yang keluar).
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Manfaat Utama & Tindakan Lapangan</h4>
+                                        <p>Menstandardisasi cara inspeksi produk agar semua operator memiliki cara
+                                            penilaian yang sama dan mencatatnya dengan simbol sederhana (seperti garis
+                                            turus/tally <i>IIII</i>).<br><br>
+                                            <b>Tindakan Lapangan:</b>
+                                            <br>• Pastikan operator selalu mencatat data secara disiplin dan jujur
+                                            setiap kali anomali terjadi.
+                                            <br>• Lakukan pengecekan berkala (misal tiap 2 jam) oleh Leader/Supervisor
+                                            untuk memastikan check sheet diisi secara real-time di stasiun kerja, bukan
+                                            diisi borongan saat menjelang pulang shift.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>📋 Slide 2: Contoh Lembar Periksa Cacat Lini Perakitan</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Di bawah
+                                    ini adalah representasi dari Lembar Periksa Cacat Produk pada lini perakitan
+                                    manufaktur dengan pencatatan tally harian:</p>
+
+                                <div class="table-scroll-wrapper"
+                                    style="background: var(--sim-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; margin-bottom: 15px; overflow-x: auto;">
+                                    <table
+                                        style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: center;">
+                                        <thead>
+                                            <tr style="background: rgba(37, 127, 168, 0.08);">
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Jenis Cacat</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Senin</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Selasa</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Rabu</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Kamis</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Jumat</th>
+                                                <th
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold;">
+                                                    Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600; text-align: left;">
+                                                    Goresan (Scratch)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    IIII (10)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    IIII II (12)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    III (8)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    IIII IIII (15)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII II
+                                                    (7)</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: bold; background: rgba(37, 127, 168, 0.03);">
+                                                    52</td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600; text-align: left;">
+                                                    Penyok (Dent)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    (5)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII I
+                                                    (6)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII
+                                                    (4)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">III (3)
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">IIII II
+                                                    (7)</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: bold; background: rgba(37, 127, 168, 0.03);">
+                                                    25</td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600; text-align: left;">
+                                                    Retak (Crack)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">II (2)
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">I (1)
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">III (3)
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">II (2)
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">II (2)
+                                                </td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: bold; background: rgba(37, 127, 168, 0.03);">
+                                                    10</td>
+                                            </tr>
+                                            <tr style="background: rgba(0, 0, 0, 0.02); font-weight: bold;">
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); text-align: left;">
+                                                    Total Harian</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">17</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">19</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">15</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">20</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">16</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); background: rgba(37, 127, 168, 0.06); color: var(--primary);">
+                                                    87</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="info-box warning desc-box-sim" id="desc-checksheet">
+                                    <h4>📝 Insight Lapangan</h4>
+                                    <p>Berdasarkan check sheet di atas, cacat <b>Goresan</b> mendominasi pengumpulan
+                                        data di semua hari kerja dengan total kontribusi 52 kali kejadian. Langkah
+                                        stratifikasi atau diagram Pareto berikutnya harus memfokuskan investigasi ke
+                                        area yang rentan gesekan.</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Kunci Sukses Pembuatan Check Sheet</h3>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Desain Check Sheet yang Baik</th>
+                                            <th>Kesalahan Umum Pembuatan</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Sederhana dan langsung dipahami oleh operator garis depan tanpa
+                                                        perlu pelatihan berjam-jam.</li>
+                                                    <li>Tentukan target data secara jelas (Kategori cacat, Waktu, Lini,
+                                                        Nama Operator).</li>
+                                                    <li>Sediakan kolom "Catatan Khusus" untuk kejadian tidak biasa
+                                                        (misal: mati listrik, penggantian bahan).</li>
+                                                    <li>Desain layout yang meminimalisir kesalahan mencatat (tally
+                                                        berjarak renggang).</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Kolom terlalu kompleks dan membingungkan sehingga operator malas
+                                                        mengisi atau menembak angka di akhir shift kerja.</li>
+                                                    <li>Tidak menyertakan identifikasi sumber data (sulit melakukan
+                                                        stratifikasi nantinya).</li>
+                                                    <li>Formulir terlalu banyak memuat teks daripada simbol checklist.
+                                                    </li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="../index.html" class="btn-navigate">🏠 Kembali ke Dashboard Utama</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('checksheet', 'Modul_Check_Sheet')">📄 Download Modul
+                                        Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('checksheet', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-checksheet">
+                                <div class="dot active" onclick="goToSlide('checksheet', 0)"></div>
+                                <div class="dot" onclick="goToSlide('checksheet', 1)"></div>
+                                <div class="dot" onclick="goToSlide('checksheet', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('checksheet', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="fishbone" class="module-section">
+                        <h2 class="mod-title">Fishbone Diagram (Ishikawa)</h2>
+
+                        <div class="slide-container" id="slide-fishbone">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Fishbone Diagram</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Fishbone Diagram?</h4>
+                                        <p>Fishbone Diagram (Diagram Tulang Ikan) atau Diagram Ishikawa adalah alat
+                                            untuk mencari akar penyebab masalah secara visual. Kepala ikan menggambarkan
+                                            <b>Masalah (Akibat)</b>, sedangkan duri-durinya menggambarkan <b>Kategori
+                                                Penyebab</b>.<br><br>
+                                            <b>Prinsip Utama: Mencari Akar Penyebab, Bukan Mencari Siapa yang Salah!</b>
+                                            <br>Di lantai produksi, tujuan utama diagram ini adalah mencari kelemahan
+                                            pada sistem kerja atau kondisi fisik (seperti metode, bahan, atau mesin),
+                                            bukan untuk menyalahkan operator.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Kategori Utama (4M1E) & Tindakan Lapangan</h4>
+                                        <p>Untuk memudahkan pencarian, kita membagi duri ikan besar menjadi 5 kategori
+                                            standar pabrik (<b>4M1E</b>):
+                                            <br>• <b>Man (Manusia)</b>: Keterampilan, pelatihan kerja, kelelahan shift.
+                                            <br>• <b>Machine (Mesin)</b>: Keausan pahat, setingan getaran, kepresisian
+                                            alat.
+                                            <br>• <b>Method (Metode)</b>: Kejelasan instruksi kerja (SOP), setingan
+                                            kecepatan konveyor.
+                                            <br>• <b>Material (Bahan)</b>: Kualitas bahan mentah dari supplier, ukuran
+                                            bahan.
+                                            <br>• <b>Environment (Lingkungan)</b>: Suhu ruangan, pencahayaan, debu di
+                                            area kerja.
+                                            <br><br>
+                                            <b>Tindakan Lapangan:</b> Adakan sesi diskusi (brainstorming) bersama
+                                            operator lapangan. Arahkan diskusi agar fokus mencari "mengapa sistem kerja
+                                            bisa lolos" menggunakan metode <b>5 Whys</b> (bertanya "mengapa" sebanyak 5
+                                            kali secara mendalam), lalu buat tindakan perbaikan nyata pada duri-duri
+                                            penyebab tersebut.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🐟 Slide 2: Struktur 4M1E di Industri Manufaktur</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Berikut
+                                    adalah contoh klasifikasi duri-duri penyebab dari diagram Ishikawa untuk masalah
+                                    "Cacat Goresan Tinggi":</p>
+
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+                                    <div
+                                        style="background: var(--sim-bg); border-top: 4px solid var(--danger); padding: 12px; border-radius: 8px;">
+                                        <strong
+                                            style="color: var(--danger); font-size: 13px; display: block; margin-bottom: 5px;">👤
+                                            Man (Manusia)</strong>
+                                        <ul
+                                            style="margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                                            <li>Operator lelah pada akhir shift malam</li>
+                                            <li>Kurang pelatihan teknik pemuatan baru</li>
+                                            <li>SOP kerja tidak dibaca di meja perakitan</li>
+                                        </ul>
+                                    </div>
+                                    <div
+                                        style="background: var(--sim-bg); border-top: 4px solid var(--primary); padding: 12px; border-radius: 8px;">
+                                        <strong
+                                            style="color: var(--primary); font-size: 13px; display: block; margin-bottom: 5px;">⚙️
+                                            Machine (Mesin)</strong>
+                                        <ul
+                                            style="margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                                            <li>Konveyor bergetar melebihi batas toleransi</li>
+                                            <li>Pahat penjepit mulai aus dan longgar</li>
+                                            <li>Sensor pemotong berdebu/tidak sensitif</li>
+                                        </ul>
+                                    </div>
+                                    <div
+                                        style="background: var(--sim-bg); border-top: 4px solid var(--warning); padding: 12px; border-radius: 8px;">
+                                        <strong
+                                            style="color: var(--warning); font-size: 13px; display: block; margin-bottom: 5px;">📜
+                                            Method (Metode)</strong>
+                                        <ul
+                                            style="margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                                            <li>Metode pemuatan bahan terlalu kasar</li>
+                                            <li>SOP pembersihan filter bulanan tidak jelas</li>
+                                            <li>Setingan laju konveyor terlalu kencang</li>
+                                        </ul>
+                                    </div>
+                                    <div
+                                        style="background: var(--sim-bg); border-top: 4px solid var(--success); padding: 12px; border-radius: 8px;">
+                                        <strong
+                                            style="color: var(--success); font-size: 13px; display: block; margin-bottom: 5px;">🪵
+                                            Material & Environment</strong>
+                                        <ul
+                                            style="margin: 0; padding-left: 14px; font-size: 12px; line-height: 1.5; color: var(--text-muted);">
+                                            <li>Kekerasan logam supplier B terlalu lunak</li>
+                                            <li>Pencahayaan lini inspeksi kurang terang</li>
+                                            <li>Kelembaban udara memicu karat dini</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="info-box success desc-box-sim" id="desc-fishbone">
+                                    <h4>🎯 Target Root Cause</h4>
+                                    <p>Gunakan teknik bertanya <b>"5 Whys" (5 Kali Mengapa)</b> secara beruntun ke
+                                        setiap duri penyebab hingga menyentuh akar masalah utama yang bisa diambil aksi
+                                        koreksinya. Jangan berhenti bertanya di level gejala fisik!</p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Kunci Sukses Brainstorming Fishbone</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card" style="border-left-color: var(--warning);">
+                                        <h4>🔍 Metode 5 Whys (Analisis Mengapa-Mengapa)</h4>
+                                        <p>Ketika duri potensial ditemukan pada Fishbone, uji penyebab itu menggunakan
+                                            metode 5 Whys untuk menelusuri rantai sebab-akibat terdalam.
+                                            <br><br><b>Contoh Nyata di Lantai Produksi:</b>
+                                            <br>• <i>Why 1:</i> Mengapa produk cacat gores? -> Karena konveyor bergerak
+                                            tersendat-sendat.
+                                            <br>• <i>Why 2:</i> Mengapa konveyor tersendat-sendat? -> Karena roda gerigi
+                                            transmisi slip.
+                                            <br>• <i>Why 3:</i> Mengapa roda transmisi slip? -> Karena kekurangan cairan
+                                            pelumas.
+                                            <br>• <i>Why 4:</i> Mengapa pelumas bisa habis? -> Karena pipa dispenser oli
+                                            bocor.
+                                            <br>• <i>Why 5:</i> Mengapa dispenser oli bocor? -> Karena jadwal preventive
+                                            maintenance rutin pipa dispenser terlewat akibat tidak ada SOP check sheet.
+                                            (<b>Akar Masalah!</b>)
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Brainstorming Tradisional</th>
+                                            <th>Menggunakan Fishbone (Ishikawa)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Diskusi tidak terarah, cenderung saling berdebat antar
+                                                        departemen secara subjektif.</li>
+                                                    <li>Tidak menggunakan kategori standar (4M1E) sehingga banyak faktor
+                                                        penting yang terlewatkan.</li>
+                                                    <li>Mencari kambing hitam pelaku kesalahan alih-alih menginvestigasi
+                                                        kelemahan sistem kerja.</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Fokus terarah langsung menginvestigasi pilar Man, Machine,
+                                                        Method, Material, Environment.</li>
+                                                    <li>Tim dipandu bertanya "5 Whys" sehingga analisis berakhir pada
+                                                        perbaikan SOP atau perawatan aset yang konkret.</li>
+                                                    <li>Menstandardisasi cara berpikir tim lintas lini di lantai
+                                                        produksi.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="../index.html" class="btn-navigate">🚀 Kembali ke Dashboard Utama</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('fishbone', 'Modul_Diagram_Ishikawa')">📄 Download
+                                        Modul Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('fishbone', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-fishbone">
+                                <div class="dot active" onclick="goToSlide('fishbone', 0)"></div>
+                                <div class="dot" onclick="goToSlide('fishbone', 1)"></div>
+                                <div class="dot" onclick="goToSlide('fishbone', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('fishbone', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                    <div id="stratifikasi" class="module-section">
+                        <h2 class="mod-title">Stratifikasi (Stratification)</h2>
+
+                        <div class="slide-container" id="slide-stratifikasi">
+                            <div class="slide active-slide">
+                                <h3>💡 Slide 1: Konsep Dasar Stratifikasi</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu Stratifikasi?</h4>
+                                        <p>Stratifikasi adalah teknik memilah-milah data agar masalah terlihat lebih
+                                            jelas dan fokus.
+                                            <br><br>
+                                            <b>Analogi Keranjang Cacat:</b>
+                                            <br>Bayangkan data cacat produk di pabrik seperti <b>satu keranjang besar
+                                                berisi campuran data cacat</b> yang campur aduk. Jika hanya melihat
+                                            keranjang tersebut secara keseluruhan, kita tidak tahu mengapa cacat itu
+                                            terjadi. Tetapi jika data tersebut dipilah-pilah (distratifikasi) ke
+                                            keranjang yang lebih kecil berdasarkan kriteria tertentu:
+                                            <br>• <b>Shift kerja</b> (Shift Pagi vs Shift Malam)
+                                            <br>• <b>Mesin</b> (Mesin A vs Mesin B)
+                                            <br>• <b>Operator</b> (Operator A vs Operator B)
+                                            <br>• <b>Supplier Bahan</b> (Supplier X vs Supplier Y)
+                                            <br>Maka kita akan melihat dengan sangat jelas area mana yang paling
+                                            bermasalah agar area paling bermasalah tersebut terlihat jelas.
+                                        </p>
+                                    </div>
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Manfaat Utama & Tindakan Lapangan</h4>
+                                        <p>Dengan memilah data yang bercampur aduk, kita tidak perlu membuang biaya
+                                            untuk melakukan investigasi menyeluruh ke seluruh lini produksi yang tidak
+                                            bermasalah.<br><br>
+                                            <b>Tindakan Lapangan:</b>
+                                            <br>Jangan biarkan data cacat menumpuk global. Pilahlah data defect harian
+                                            Anda berdasarkan shift, mesin, atau material. Begitu terlihat ada satu
+                                            kelompok yang menyumbang cacat paling ekstrem (misalnya Mesin A di Shift
+                                            Malam), segera lakukan tindakan perbaikan terfokus di stasiun kerja
+                                            tersebut.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>🗂️ Slide 2: Studi Kasus Stratifikasi Cacat Lini Perakitan</h3>
+                                <p class="sim-instruction"
+                                    style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Perhatikan
+                                    bagaimana data cacat global "Goresan & Penyok" yang tampak membingungkan menjadi
+                                    sangat jelas setelah dikelompokkan:</p>
+
+                                <div class="table-scroll-wrapper"
+                                    style="background: var(--sim-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 15px; overflow-x: auto; margin-bottom: 15px;">
+                                    <table
+                                        style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: center;">
+                                        <thead>
+                                            <tr style="background: rgba(37, 127, 168, 0.08);">
+                                                <th
+                                                    style="padding: 8px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Kombinasi Sumber Daya</th>
+                                                <th
+                                                    style="padding: 8px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Operator Shift Pagi</th>
+                                                <th
+                                                    style="padding: 8px; border: 1px solid var(--card-border); color: var(--primary);">
+                                                    Operator Shift Malam</th>
+                                                <th
+                                                    style="padding: 8px; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold;">
+                                                    Total Cacat</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600; text-align: left;">
+                                                    Mesin A (Seting Lama)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">5 Cacat
+                                                </td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--danger); font-weight: bold; background: rgba(239, 35, 60, 0.05);">
+                                                    38 Cacat</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: bold;">
+                                                    43</td>
+                                            </tr>
+                                            <tr>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600; text-align: left;">
+                                                    Mesin B (Seting Baru)</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">3 Cacat
+                                                </td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">4 Cacat
+                                                </td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); font-weight: bold;">
+                                                    7</td>
+                                            </tr>
+                                            <tr style="background: rgba(0, 0, 0, 0.02); font-weight: bold;">
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); text-align: left;">
+                                                    Total Cacat Per Shift</td>
+                                                <td style="padding: 10px; border: 1px solid var(--card-border);">8</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); color: var(--danger);">
+                                                    42</td>
+                                                <td
+                                                    style="padding: 10px; border: 1px solid var(--card-border); background: rgba(37, 127, 168, 0.06); color: var(--primary);">
+                                                    50 Cacat</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="info-box warning desc-box-sim" id="desc-stratifikasi">
+                                    <h4>🔍 Hasil Diagnosis Stratifikasi</h4>
+                                    <p>Jika hanya melihat data total (50 Cacat), kita berasumsi seluruh lini bermasalah
+                                        secara sistemik. Namun berkat stratifikasi di atas, kita tahu dengan pasti bahwa
+                                        <b>kombinasi Mesin A di Shift Malam menyumbang 76% masalah (38 cacat)</b>.
+                                        Tindakan korektif sekarang dapat difokuskan untuk mengaudit setingan Mesin A
+                                        khusus saat dijalankan oleh tim shift malam.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="slide">
+                                <h3>⚙️ Slide 3: Sinergi Stratifikasi dengan 7 QC Tools Lain</h3>
+                                <div class="theory-content">
+                                    <div class="info-box detail-card" style="border-left-color: var(--success);">
+                                        <h4>🔗 Sinergi Stratifikasi dalam Perbaikan Kualitas</h4>
+                                        <p>Stratifikasi adalah roh penggerak dari visualisasi diagram lainnya. Ia
+                                            membagi data global menjadi sub-kelompok (shift, mesin, supplier) agar
+                                            diagram Pareto, Scatter, atau Histogram dapat menyajikan pola yang jauh
+                                            lebih akurat dan terfokus.</p>
+                                    </div>
+                                </div>
+                                <div class="table-content">
+                                    <table class="comparison-table">
+                                        <tr>
+                                            <th>Analisis Tanpa Stratifikasi (Global)</th>
+                                            <th>Dengan Teknik Stratifikasi (Terpilah)</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <ul>
+                                                    <li>Data anomali bercampur aduk, grafik terlihat acak tanpa ada pola
+                                                        kesimpulan yang solid.</li>
+                                                    <li>Rekomendasi perbaikan menjadi terlalu luas dan mahal karena
+                                                        pimpinan menganggap seluruh lini produksi bermasalah.</li>
+                                                </ul>
+                                            </td>
+                                            <td>
+                                                <ul>
+                                                    <li>Data dipisah per shift/mesin sehingga anomali terisolasi ke
+                                                        target paling spesifik secara tajam.</li>
+                                                    <li>Tindakan koreksi sangat murah dan efisien karena fokus
+                                                        menyelesaikan masalah di titik penyumbang cacat terbesar.</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="action-btns">
+                                    <a href="../index.html" class="btn-navigate">🚀 Kembali ke Dashboard Utama</a>
+                                    <button class="export-btn"
+                                        onclick="exportToPDFNative('stratifikasi', 'Modul_Stratifikasi')">📄 Download
+                                        Modul Bab Ini (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('stratifikasi', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-stratifikasi">
+                                <div class="dot active" onclick="goToSlide('stratifikasi', 0)"></div>
+                                <div class="dot" onclick="goToSlide('stratifikasi', 1)"></div>
+                                <div class="dot" onclick="goToSlide('stratifikasi', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('stratifikasi', 1)">Selanjutnya ➡️</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Tab 2: 8 Steps Meetings -->
+            <div id="tab-8-steps" class="main-tab-pane">
+                <div class="pdf-viewer-container">
+                    <div class="pdf-header-info">
+                        <div class="pdf-title-area">
+                            <h2>📋 Panduan 8 Langkah QCC (G-QCC)</h2>
+                            <p>Materi Pelatihan Standardisasi QC Circle Problem Solving</p>
+                        </div>
+                        <div class="pdf-action-buttons">
+                            <a href="/assets/img/8step.pdf" target="_blank" class="pdf-btn pdf-btn-open">
+                                <span>🔓 Buka di Tab Baru</span>
+                            </a>
+                            <a href="/assets/img/8step.pdf" download class="pdf-btn pdf-btn-download">
+                                <span>📥 Download Modul</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="pdf-iframe-wrapper">
+                        <object id="pdfViewer" data-src="/assets/img/8step.pdf" type="application/pdf" width="100%"
+                            style="height: 85vh; min-height: 800px; border: none;">
+                            <div style="padding: 20px; text-align: center; background: #fff;">
+                                <p style="margin-bottom: 10px;">Browser Anda tidak mendukung preview PDF secara
+                                    langsung.</p>
+                                <a href="/assets/img/8step.pdf" target="_blank"
+                                    style="color: var(--primary); text-decoration: underline; font-weight: bold;">Download
+                                    PDF di sini</a>
+                            </div>
+                        </object>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // ----------------------------------------------------
+            // SYSTEM: THEME & NAVIGATION
+            // ----------------------------------------------------
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
+            Chart.defaults.color = "#4b5563";
+            Chart.defaults.plugins.legend.display = false;
+
+            function toggleTheme() {
+                const body = document.body;
+                body.classList.toggle('dark-mode');
+                const isDark = body.classList.contains('dark-mode');
+                const themeBtn = document.getElementById('themeBtn');
+                if (themeBtn) themeBtn.innerText = isDark ? '☀️' : '🌙';
+
+                Chart.defaults.color = isDark ? "#cbd5e1" : "#4b5563";
+                const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
+                const textColor = isDark ? "#cbd5e1" : "#4b5563";
+
+                [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
+                    if (chart) {
+                        if (chart.options.scales) {
+                            Object.keys(chart.options.scales).forEach(scaleKey => {
+                                let scale = chart.options.scales[scaleKey];
+                                if (!scale.grid) scale.grid = {};
+                                scale.grid.color = gridColor;
+                                if (!scale.ticks) scale.ticks = {};
+                                scale.ticks.color = textColor;
+                            });
+                        }
+                        if (chart === simPareto) {
+                            chart.data.datasets[1].backgroundColor = isDark ? '#89CFF0' : '#257fa8';
+                            chart.data.datasets[0].borderColor = isDark ? '#f87171' : '#ef233c';
+                            chart.data.datasets[0].backgroundColor = isDark ? '#f87171' : '#ef233c';
+                        }
+                        chart.update('none');
+                    }
+                });
+
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            }
+
+            function switchMainTab(tabId, btn) {
+                document.querySelectorAll('.main-tab-pane').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.querySelectorAll('.top-tab-btn').forEach(el => {
+                    el.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+                if (btn) {
+                    btn.classList.add('active');
+                }
+
+                // Lazy load PDF object when switching to 8 steps tab to prevent browser deferred blank render
+                if (tabId === 'tab-8-steps') {
+                    setTimeout(() => {
+                        const pdfViewer = document.getElementById('pdfViewer');
+                        if (pdfViewer && !pdfViewer.hasAttribute('data')) {
+                            pdfViewer.setAttribute('data', pdfViewer.getAttribute('data-src'));
+                        }
+                    }, 100);
+                }
+            }
+
+            function openModule(modId) {
+                document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+                document.getElementById(modId).classList.add('active');
+                event.currentTarget.classList.add('active');
+                goToSlide(modId, 0);
+            }
+
+            // ----------------------------------------------------
+            // SYSTEM: SLIDE LOGIC
+            // ----------------------------------------------------
+            const slideState = { dasar: 0, scatter: 0, histogram: 0, control: 0, pareto: 0, checksheet: 0, fishbone: 0, stratifikasi: 0 };
+
+            function changeSlide(moduleId, direction) {
+                const slides = document.querySelectorAll(`#slide-${moduleId} .slide`);
+                let newIdx = slideState[moduleId] + direction;
+                if (newIdx >= 0 && newIdx < slides.length) goToSlide(moduleId, newIdx);
+            }
+
+            function goToSlide(moduleId, index) {
+                const slides = document.querySelectorAll(`#slide-${moduleId} .slide`);
+                const dots = document.querySelectorAll(`#dots-${moduleId} .dot`);
+                const btnPrev = document.querySelector(`#${moduleId} .slide-btn:first-child`);
+                const btnNext = document.querySelector(`#${moduleId} .slide-btn:last-child`);
+
+                slides[slideState[moduleId]].classList.remove('active-slide');
+                dots[slideState[moduleId]].classList.remove('active');
+
+                slideState[moduleId] = index;
+                slides[index].classList.add('active-slide');
+                dots[index].classList.add('active');
+
+                btnPrev.disabled = index === 0;
+                btnNext.disabled = index === slides.length - 1;
+            }
+
+            // ----------------------------------------------------
+            // SYSTEM: CHARTS & SIMULATOR
+            // ----------------------------------------------------
+            const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || ('ontouchstart' in window);
+            let simScatter, simHist, simCtrl, simPareto;
+
+            function initCharts() {
+                const customBg = {
+                    id: 'customCanvasBackgroundColor',
+                    beforeDraw: (chart, args, options) => {
+                        const { ctx } = chart; ctx.save();
+                        ctx.globalCompositeOperation = 'destination-over';
+                        ctx.fillStyle = options.color || '#ffffff';
+                        ctx.fillRect(0, 0, chart.width, chart.height);
+                        ctx.restore();
+                    }
+                };
+
+                const scatterCtx = document.getElementById('simScatterChart').getContext('2d');
+                simScatter = new Chart(scatterCtx, {
+                    type: 'scatter',
+                    data: { datasets: [{ data: [], backgroundColor: '#10b981', pointRadius: 5 }] },
+                    options: { responsive: true, maintainAspectRatio: false, devicePixelRatio: Math.min(window.devicePixelRatio, 2), events: isMobileDevice ? ['click', 'touchstart'] : ['mousemove', 'mouseout', 'click', 'touchstart'], scales: { x: { min: 0, max: 100 }, y: { min: 0, max: 100 } }, plugins: { customCanvasBackgroundColor: { color: 'transparent' } } },
+                    plugins: [customBg]
+                });
+
+                const histCtx = document.getElementById('simHistChart').getContext('2d');
+                simHist = new Chart(histCtx, {
+                    type: 'bar',
+                    data: { labels: ['38', '39', '40', '41', '42', '43', '44', '45'], datasets: [{ data: [], backgroundColor: '#10b981', borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, devicePixelRatio: Math.min(window.devicePixelRatio, 2), events: isMobileDevice ? ['click', 'touchstart'] : ['mousemove', 'mouseout', 'click', 'touchstart'], plugins: { customCanvasBackgroundColor: { color: 'transparent' } } },
+                    plugins: [customBg]
+                });
+
+                const ctrlCtx = document.getElementById('simCtrlChart').getContext('2d');
+                simCtrl = new Chart(ctrlCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({ length: 20 }, (_, i) => "T-" + (i + 1)),
+                        datasets: [
+                            { data: [], borderColor: '#3b82f6', tension: 0.3, pointBackgroundColor: '#3b82f6' },
+                            { data: Array(20).fill(50), borderColor: '#10b981', borderDash: [5, 5], pointRadius: 0, borderWidth: 2 },
+                            { data: Array(20).fill(80), borderColor: '#ef4444', borderDash: [4, 4], pointRadius: 0, borderWidth: 1 },
+                            { data: Array(20).fill(20), borderColor: '#ef4444', borderDash: [4, 4], pointRadius: 0, borderWidth: 1 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, devicePixelRatio: Math.min(window.devicePixelRatio, 2), events: isMobileDevice ? ['click', 'touchstart'] : ['mousemove', 'mouseout', 'click', 'touchstart'], scales: { y: { min: 0, max: 100 } }, plugins: { customCanvasBackgroundColor: { color: 'transparent' } } },
+                    plugins: [customBg]
+                });
+
+                const paretoCtx = document.getElementById('simParetoChart').getContext('2d');
+                simPareto = new Chart(paretoCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                type: 'line',
+                                label: 'Kumulatif (%)',
+                                data: [],
+                                borderColor: '#ef233c',
+                                backgroundColor: '#ef233c',
+                                borderWidth: 2,
+                                pointRadius: 4,
+                                yAxisID: 'y1',
+                                order: 1
+                            },
+                            {
+                                type: 'bar',
+                                label: 'Frekuensi',
+                                data: [],
+                                backgroundColor: '#257fa8',
+                                borderRadius: 4,
+                                yAxisID: 'y',
+                                order: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        devicePixelRatio: Math.min(window.devicePixelRatio, 2),
+                        events: isMobileDevice ? ['click', 'touchstart'] : ['mousemove', 'mouseout', 'click', 'touchstart'],
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            customCanvasBackgroundColor: { color: 'transparent' }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false }
+                            },
+                            y: {
+                                type: 'linear',
+                                position: 'left',
+                                ticks: { beginAtZero: true }
+                            },
+                            y1: {
+                                type: 'linear',
+                                position: 'right',
+                                min: 0,
+                                max: 100,
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    callback: function (value) { return value + "%" }
+                                }
+                            }
+                        }
+                    },
+                    plugins: [customBg]
+                });
+
+                updateScatterSim('positif', document.querySelector('#scatter .sim-btn-act.active'));
+                updateHistSim('normal', document.querySelector('#histogram .sim-btn-act.active'));
+                updateCtrlSim('normal', document.querySelector('#control .sim-btn-act.active'));
+                updateParetoSim('dominan', document.querySelector('#pareto .sim-btn-act.active'));
+            }
+
+            function updateScatterSim(type, btn) {
+                document.querySelectorAll('#scatter .sim-btn-act').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                const descBox = document.getElementById('desc-scatter');
+
+                let newData = [];
+                for (let i = 0; i < 30; i++) {
+                    let x = Math.random() * 80 + 10;
+                    let y = type === 'positif' ? x + (Math.random() * 20 - 10) : (type === 'negatif' ? 100 - x + (Math.random() * 20 - 10) : Math.random() * 80 + 10);
+                    newData.push({ x, y });
+                }
+                simScatter.data.datasets[0].data = newData;
+                simScatter.data.datasets[0].backgroundColor = type === 'positif' ? '#10b981' : (type === 'negatif' ? '#f59e0b' : '#ef4444');
+                simScatter.update();
+
+                if (type === 'positif') descBox.innerHTML = "<h4>↗️ Pola Korelasi Positif</h4><p>Titik membentuk barisan yang miring ke kanan atas. Artinya <b>Berbanding Lurus</b>. Ibarat pedal gas, makin dalam diinjak (X naik), maka kecepatan (Y) makin bertambah.</p>";
+                else if (type === 'negatif') descBox.innerHTML = "<h4>↘️ Pola Korelasi Negatif</h4><p>Titik miring ke kanan bawah. Artinya <b>Berbanding Terbalik</b>. Jika variabel penyebab (X) dinaikkan, hasil (Y) justru akan menurun drastis.</p>";
+                else descBox.innerHTML = "<h4>🌌 Pola Tidak Berkorelasi</h4><p>Titik menyebar tak tentu arah. Kesimpulan: Variabel X sama sekali BUKAN penyebab perubahan Variabel Y. Hipotesis Anda salah, segera cari faktor mesin atau material lain!</p>";
+            }
+
+            function updateHistSim(type, btn) {
+                document.querySelectorAll('#histogram .sim-btn-act').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                const descBox = document.getElementById('desc-histogram');
+
+                let newData = type === 'normal' ? [2, 8, 25, 45, 25, 8, 2, 0] : (type === 'menceng' ? [40, 30, 15, 8, 4, 2, 1, 0] : [5, 25, 8, 3, 6, 22, 5, 0]);
+                simHist.data.datasets[0].data = newData;
+                simHist.data.datasets[0].backgroundColor = type === 'normal' ? '#10b981' : (type === 'menceng' ? '#ef4444' : '#f59e0b');
+                simHist.update();
+
+                if (type === 'normal') descBox.innerHTML = "<h4>🔔 Pola Distribusi Normal (Lonceng)</h4><p>Gunung tinggi dan ramping tepat di tengah. Artinya <b>Proses Sangat Sehat (Kapabel)</b>. Variasi produk seragam dan presisi mengenai nilai target.</p>";
+                else if (type === 'menceng') descBox.innerHTML = "<h4>🏔️ Pola Menceng (Skewed)</h4><p>Puncak gunung bergeser tajam ke satu sisi. Terjadi karena adanya batas fisik mesin (mentok) atau indikasi alat potong yang mulai aus/tumpul.</p>";
+                else descBox.innerHTML = "<h4>🐫 Pola Dua Puncak (Bimodal)</h4><p>Gunung kembar! Sinyal bahaya bahwa data produksi Anda <b>telah tercampur</b>. Sangat mungkin ini campuran data dari 2 material yang berbeda atau 2 shift pekerja.</p>";
+            }
+
+            function updateCtrlSim(type, btn) {
+                document.querySelectorAll('#control .sim-btn-act').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                const descBox = document.getElementById('desc-control');
+
+                let newData = []; let colors = []; let radii = [];
+                for (let i = 0; i < 20; i++) {
+                    let val = 50 + (Math.random() * 16 - 8);
+                    let col = '#3b82f6'; let rad = 4;
+
+                    if (type === 'outlier' && i === 10) { val = 95; col = '#ef4444'; rad = 8; }
+                    else if (type === 'shift' && i >= 8 && i <= 15) { val = 68 + (Math.random() * 8 - 4); col = '#f59e0b'; rad = 6; }
+                    else if (type === 'trend' && i >= 12) { val = 50 + ((i - 12) * 5); col = '#ef4444'; rad = 6; }
+
+                    newData.push(val); colors.push(col); radii.push(rad);
+                }
+                simCtrl.data.datasets[0].data = newData;
+                simCtrl.data.datasets[0].pointBackgroundColor = colors;
+                simCtrl.data.datasets[0].pointRadius = radii;
+                simCtrl.update();
+
+                if (type === 'normal') descBox.innerHTML = "<h4>✅ Pola Stabil Alami (In Control)</h4><p>Titik bergerak naik-turun acak di sekitar garis rata-rata (CL). <b>Tindakan:</b> JANGAN DIUBAH! Ini adalah variasi natural mesin (Common Cause).</p>";
+                else if (type === 'outlier') descBox.innerHTML = "<h4>⚠️ Pola Titik Ekstrem (Outlier)</h4><p>Sinyal Merah! Titik menabrak batas kontrol. Disebabkan insiden dadakan akut (Special Cause): Listrik anjlok, atau kelalaian operator saat input data.</p>";
+                else if (type === 'shift') descBox.innerHTML = "<h4>〰️ Pola Pergeseran Permanen (Shift)</h4><p>Minimal 7 titik beruntun stagnan di satu sisi area. Karakter mesin telah berubah. <b>Cek:</b> Apakah baru ganti material/supplier? Mengganti alat potong?</p>";
+                else descBox.innerHTML = "<h4>📈 Pola Menanjak / Menurun (Trend)</h4><p>Minimal 6 titik naik konstan mirip pola tangga. Ini ciri keausan fisik. Misalnya bantalan pahat yang makin lama makin aus, atau suhu mesin memanas pelan-pelan.</p>";
+            }
+
+            function updateParetoSim(type, btn) {
+                document.querySelectorAll('#pareto .sim-btn-act').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                const descBox = document.getElementById('desc-pareto');
+
+                let labels = [];
+                let freqs = [];
+                let cumPercents = [];
+
+                if (type === 'dominan') {
+                    labels = ["Goresan", "Penyok", "Retak", "Kotor", "Bocor"];
+                    freqs = [60, 25, 10, 4, 1];
+                } else if (type === 'merata') {
+                    labels = ["Goresan", "Penyok", "Retak", "Kotor", "Bocor"];
+                    freqs = [22, 21, 20, 19, 18];
+                } else if (type === 'ekstrem') {
+                    labels = ["Bocor", "Goresan", "Penyok", "Retak", "Kotor"];
+                    freqs = [95, 2, 1, 1, 1];
+                }
+
+                let total = freqs.reduce((a, b) => a + b, 0);
+                let currentSum = 0;
+                freqs.forEach(val => {
+                    currentSum += val;
+                    cumPercents.push((currentSum / total) * 100);
+                });
+
+                simPareto.options.scales.y.max = total;
+                simPareto.data.labels = labels;
+                simPareto.data.datasets[1].data = freqs;
+                simPareto.data.datasets[0].data = cumPercents;
+
+                let isDark = document.body.classList.contains('dark-mode');
+                simPareto.data.datasets[1].backgroundColor = isDark ? '#89CFF0' : '#257fa8';
+                simPareto.data.datasets[0].borderColor = isDark ? '#f87171' : '#ef233c';
+                simPareto.data.datasets[0].backgroundColor = isDark ? '#f87171' : '#ef233c';
+
+                simPareto.update('none');
+
+                if (type === 'dominan') {
+                    descBox.innerHTML = "<h4>🎯 Pola Cacat Dominan (Vital Few)</h4><p>📌 <strong>Masalah Utama:</strong> Cacat \"Goresan & Penyok\" menyumbang 85% masalah.<br>🎯 <strong>Tindakan:</strong> Fokus perbaiki 2 cacat ini saja (abaikan 3 lainnya untuk efisiensi).</p>";
+                } else if (type === 'merata') {
+                    descBox.innerHTML = "<h4>🏔️ Pola Distribusi Merata (Flat)</h4><p>📌 <strong>Masalah Utama:</strong> Cacat menyebar rata tanpa dominasi tunggal.<br>🎯 <strong>Tindakan:</strong> Audit SOP kerja, periksa kualitas bahan baku supplier, dan latih ulang tim.</p>";
+                } else {
+                    descBox.innerHTML = "<h4>🔥 Pola Penyebab Tunggal Ekstrem</h4><p>📌 <strong>Masalah Utama:</strong> Cacat \"Bocor\" menyumbang 95% masalah.<br>🎯 <strong>Tindakan:</strong> Hentikan/periksa segera lini pemicu kebocoran.</p>";
+                }
+            }
+
+            // ----------------------------------------------------
+            // SYSTEM: NATIVE PRINT TO PDF (100% BEBAS DARI BLANK)
+            // ----------------------------------------------------
+            async function exportToPDFNative(modId, titleName) {
+                // Tampilkan layar loading agar UI terkunci
+                const overlay = document.getElementById('pdf-loading-overlay');
+                const loadingText = document.querySelector('#pdf-loading-overlay p');
+                overlay.classList.add('show');
+                if (loadingText) loadingText.innerHTML = "Mengekstrak materi teori dan tabel...";
+
+                // Tambahkan print-mode ke body sebelum melakukan capture
+                document.body.classList.add('print-mode');
+
+                // Gunakan font size desktop untuk grafik selama capture
+                Chart.defaults.font.size = 13;
+
+                // Pastikan tema terang aktif karena media kertas butuh kontras tinggi
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                if (isDarkMode) {
+                    document.body.classList.remove('dark-mode');
+                    Chart.defaults.color = "#4b5563";
+                }
+
+                // Variabel untuk melacak status diagram saat merestorasi
+                let states = [];
+                let chartInstance = null;
+                let originalFunc = null;
+
+                try {
+                    // Beri waktu 300ms agar CSS warna berubah sebelum sistem mengekstrak
+                    await new Promise(r => setTimeout(r, 300));
+
+                    // EKSTRAK TEKS DARI SLIDE DOM (Materi Teori & Tabel)
+                    const teori1_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) h4`).innerHTML;
+                    const teori1_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) p`).innerHTML;
+                    const teori2_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) h4`).innerHTML;
+                    const teori2_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) p`).innerHTML;
+                    const tableHTML = document.querySelector(`#${modId} .table-content`).innerHTML;
+
+                    // PERSIAPAN PENGAMBILAN FOTO SEMUA CHART SIMULASI
+                    if (modId === 'scatter') {
+                        chartInstance = simScatter; originalFunc = updateScatterSim;
+                        states = [
+                            { type: 'positif', label: '1. Pola Korelasi Positif (Searah)' },
+                            { type: 'negatif', label: '2. Pola Korelasi Negatif (Terbalik)' },
+                            { type: 'acak', label: '3. Pola Tidak Berkorelasi (Acak)' }
+                        ];
+                    } else if (modId === 'histogram') {
+                        chartInstance = simHist; originalFunc = updateHistSim;
+                        states = [
+                            { type: 'normal', label: '1. Pola Distribusi Normal (Lonceng Sempurna)' },
+                            { type: 'menceng', label: '2. Pola Distribusi Menceng (Skewed)' },
+                            { type: 'bimodal', label: '3. Pola Distribusi Dua Puncak (Bimodal)' }
+                        ];
+                    } else if (modId === 'control') {
+                        chartInstance = simCtrl; originalFunc = updateCtrlSim;
+                        states = [
+                            { type: 'normal', label: '1. Pola Proses Stabil Alami (In Control)' },
+                            { type: 'outlier', label: '2. Pola Deteksi Titik Ekstrem (Outlier)' },
+                            { type: 'shift', label: '3. Pola Deteksi Pergeseran Rata-rata (Shift)' },
+                            { type: 'trend', label: '4. Pola Deteksi Kerusakan Bertahap (Trend)' }
+                        ];
+                    } else if (modId === 'pareto') {
+                        chartInstance = simPareto; originalFunc = updateParetoSim;
+                        states = [
+                            { type: 'dominan', label: '1. Pola Cacat Dominan (Vital Few)' },
+                            { type: 'merata', label: '2. Pola Distribusi Merata (Flat)' },
+                            { type: 'ekstrem', label: '3. Pola Penyebab Tunggal Ekstrem' }
+                        ];
+                    }
+
+                    let albumHTML = "";
+                    let count = 1;
+
+                    if (states.length > 0) {
+                        // Matikan animasi transisi Chart.js agar langsung instan difoto
+                        let prevAnim = Chart.defaults.animation.duration;
+                        Chart.defaults.animation.duration = 0;
+
+                        // LOOP: Ubah Chart -> Tunggu Digambar -> Jepret Foto -> Ambil Penjelasan
+                        for (let st of states) {
+                            if (loadingText) {
+                                const cleanLabel = st.label.split('. ')[1] || st.label;
+                                loadingText.innerHTML = `Mengambil gambar grafik (${count}/${states.length}): <strong>${cleanLabel}</strong>...`;
+                            }
+
+                            originalFunc(st.type, null);
+                            chartInstance.update('none');
+
+                            // WAKTU TUNGGU SANGAT KRUSIAL: Tunggu 400ms agar browser selesai menggambar pixel di kanvas
+                            await new Promise(r => setTimeout(r, 400));
+
+                            // Jepret foto dari kanvas chart
+                            const imgData = chartInstance.canvas.toDataURL('image/png', 1.0);
+
+                            // Tarik teks penjelasan di dalam box kuning
+                            const descHTML = document.getElementById(`desc-${modId}`).innerHTML;
+
+                            // Bangun struktur kotak PDF dua kolom (Side-by-Side)
+                            albumHTML += `
+                        <div class="print-row">
+                            <div class="print-col-chart">
+                                <img src="${imgData}" alt="${st.label}">
+                            </div>
+                            <div class="print-col-desc">
+                                <h3 style="color: var(--primary); margin-top: 0; font-size: 15px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 8px;">
+                                    ${st.label}
+                                </h3>
+                                <div style="background: #f8fafc; border-left: 4px solid #10b981; padding: 10px; border-radius: 6px; font-size: 12.5px; line-height: 1.5; color: #1f2937;">
+                                    ${descHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                            count++;
+                        }
+
+                        Chart.defaults.animation.duration = prevAnim;
+                    } else {
+                        // For non-chart theoretical tools, Slide 2 is a custom HTML visualization (table or list)
+                        // Let's capture the Slide 2 HTML directly!
+                        const slide2HTML = document.querySelector(`#slide-${modId} .slide:nth-child(2)`).innerHTML;
+
+                        albumHTML += `
+                    <div style="background: #ffffff; border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; margin-bottom: 25px; page-break-inside: avoid;">
+                        ${slide2HTML}
+                    </div>
+                `;
+                    }
+
+                    if (loadingText) loadingText.innerHTML = "Menyusun tata letak halaman PDF...";
+
+                    // Bangun Halaman Sampul Premium
+                    const today = new Date().toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric"
+                    });
+                    const currentYear = new Date().getFullYear();
+                    const prettyTitle = titleName.replace(/_/g, ' ');
+
+                    const coverHTML = `
+                <div class="print-cover">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Buku Panduan & Pelatihan Digital</div>
+                    <div class="print-cover-decor"></div>
+                    <div class="print-cover-title">Buku Saku QCC Tools</div>
+                    <div class="print-cover-subtitle">Modul: ${prettyTitle}</div>
+                    
+                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 12px; background: rgba(37, 127, 168, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 600;">Scatter Diagram</span>
+                        <span style="font-size: 12px; background: rgba(46, 196, 182, 0.08); color: #2ec4b6; padding: 6px 14px; border-radius: 20px; font-weight: 600;">Histogram</span>
+                        <span style="font-size: 12px; background: rgba(239, 35, 96, 0.08); color: #ef233c; padding: 6px 14px; border-radius: 20px; font-weight: 600;">Control Chart</span>
+                        <span style="font-size: 12px; background: rgba(37, 127, 168, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 600;">Pareto Diagram</span>
+                    </div>
+
+                    <div class="print-cover-meta">
+                        Disusun oleh:<br>
+                        <strong>Pak Supri & Tim QC</strong><br><br>
+                        Tanggal Unduh:<br>
+                        <strong>${today}</strong><br>
+                        <span style="font-size: 10px; color: #94a3b8; display: block; margin-top: 20px;">Quality Control Training Dashboard © ${currentYear}</span>
+                    </div>
+                </div>
+                <div style="page-break-after: always;"></div>
+            `;
+
+                    // RAKIT SELURUH BLOK MENJADI SATU KESATUAN HTML KHUSUS CETAK
+                    const finalPrintHTML = `
+                ${coverHTML}
+
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">A. Teori Fundamental</h2>
+                    <div style="margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; page-break-inside: avoid;">
+                        <h4 style="color: var(--primary); margin-bottom: 6px; font-size: 14px;">${teori1_judul}</h4>
+                        <p style="color: #334155; line-height: 1.6; text-align: justify; font-size: 13px;">${teori1_isi}</p>
+                    </div>
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; page-break-inside: avoid;">
+                        <h4 style="color: var(--primary); margin-bottom: 6px; font-size: 14px;">${teori2_judul}</h4>
+                        <p style="color: #334155; line-height: 1.6; text-align: justify; font-size: 13px;">${teori2_isi}</p>
+                    </div>
+                </div>
+
+                <div style="page-break-before: always; padding-top: 10px;">
+                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">B. Kamus Analisis Diagnostik Pola Grafik</h2>
+                    <p style="margin-bottom: 20px; color: #4b5563; font-size: 13px; line-height: 1.6;">
+                        Di bawah ini adalah katalog pola grafik proses produksi yang ditangkap oleh sistem simulasi interaktif, beserta interpretasi diagnostik akar masalah dan rekomendasi penanganannya:
+                    </p>
+                    ${albumHTML}
+                </div>
+
+                <div style="page-break-before: always; padding-top: 10px;">
+                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">C. Perbandingan Metode Eksekusi Data</h2>
+                    <p style="margin-bottom: 15px; color: #4b5563; font-size: 13px; line-height: 1.6;">
+                        Tabel berikut memaparkan perbandingan antara metode pembuatan diagram secara konvensional (menggunakan Microsoft Excel) dan metode otomatis melalui Platform Digital QC (sistem web ini):
+                    </p>
+                    <div class="print-table">
+                        ${tableHTML}
+                    </div>
+                </div>
+            `;
+
+                    // Tembakkan HTML tersebut ke wadah cetak yang disiapkan di tag <body>
+                    document.getElementById('print-area').innerHTML = finalPrintHTML;
+
+                    // Matikan loading, beri jeda untuk browser menyiapkan halaman cetak
+                    overlay.classList.remove('show');
+
+                    // Fungsi untuk membersihkan status cetak dan merestorasi UI
+                    let isCleaned = false;
+                    const cleanup = () => {
+                        if (isCleaned) return;
+                        isCleaned = true;
+
+                        // Hapus class print-mode agar UI kembali responsif normal
+                        document.body.classList.remove('print-mode');
+
+                        // Kembalikan ukuran font Chart.js default
+                        Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
+
+                        // Kembalikan tema jika pengguna sebelumnya dalam dark mode
+                        if (isDarkMode) {
+                            document.body.classList.add('dark-mode');
+                            Chart.defaults.color = "#cbd5e1";
+                        } else {
+                            Chart.defaults.color = "#4b5563";
+                        }
+
+                        // Kembalikan chart web ke status semula/default
+                        if (states.length > 0 && originalFunc) {
+                            originalFunc(states[0].type, document.querySelector(`#${modId} .sim-btn-act`));
+                        }
+
+                        // Force update semua chart agar sesuai viewport normal kembali
+                        [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
+                            if (chart) chart.update('none');
+                        });
+
+                        // Hapus event listener agar tidak menumpuk
+                        window.removeEventListener('afterprint', cleanup);
+                    };
+
+                    // Pasang event listener setelah print selesai/dibatalkan
+                    window.addEventListener('afterprint', cleanup);
+
+                    setTimeout(() => {
+                        window.print();
+
+                        // Fallback jika afterprint tidak dipicu dengan benar di browser tertentu
+                        setTimeout(cleanup, 2500);
+                    }, 300);
+
+                } catch (error) {
+                    console.error(error);
+                    alert("Maaf, terjadi kesalahan saat merender data simulasi.");
+                    overlay.classList.remove('show');
+
+                    // Lakukan cleanup jika terjadi error
+                    document.body.classList.remove('print-mode');
+                    Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
+                    if (isDarkMode) {
+                        document.body.classList.add('dark-mode');
+                        Chart.defaults.color = "#cbd5e1";
+                    }
+                }
+            }
+
+            window.onload = function () {
+                initCharts();
+                startLiveClock('live-time-text');
+
+                const savedTheme = localStorage.getItem('theme');
+                const isDark = savedTheme === 'dark';
+                if (isDark) {
+                    document.body.classList.add('dark-mode');
+                    const themeBtn = document.getElementById('themeBtn');
+                    if (themeBtn) themeBtn.innerText = "☀️";
+                    setTimeout(() => {
+                        Chart.defaults.color = "#cbd5e1";
+                        const gridColor = "rgba(255, 255, 255, 0.08)";
+                        const textColor = "#cbd5e1";
+                        [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
+                            if (chart) {
+                                if (chart.options.scales) {
+                                    Object.keys(chart.options.scales).forEach(scaleKey => {
+                                        let scale = chart.options.scales[scaleKey];
+                                        if (!scale.grid) scale.grid = {};
+                                        scale.grid.color = gridColor;
+                                        if (!scale.ticks) scale.ticks = {};
+                                        scale.ticks.color = textColor;
+                                    });
+                                }
+                                if (chart === simPareto) {
+                                    chart.data.datasets[1].backgroundColor = '#5c7aff';
+                                    chart.data.datasets[0].borderColor = '#f87171';
+                                    chart.data.datasets[0].backgroundColor = '#f87171';
+                                }
+                                chart.update('none');
+                            }
+                        });
+                    }, 100);
+                }
+            };
+        </script>
+
+        <!-- Bottom Navigation Mobile -->
+        <nav class="bottom-nav">
+            <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
+            <a href="scatter.html" class="bnav-item" title="Scatter">📈<span>Scatter</span></a>
+            <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
+            <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
+            <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+        </nav>
+        <script src="/js/chatbot.js" defer></script>
+</body>
+
+</html>

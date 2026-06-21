@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Pareto Diagram - Diagnostic Analysis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/design-tokens.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layouts.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <style>
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px; }
+        .input-header { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--text); text-align: center;}
+
+        .color-picker-container { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border-color); text-align: center; flex-shrink: 0; }
+        .color-picker-container p { font-size: 12px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
+        .color-options { display: flex; justify-content: center; gap: 6px; }
+        .color-circle { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.8); transition: transform 0.2s; }
+        .color-circle:hover { transform: scale(1.2); }
+
+        .issues-list { margin: 8px 0 0 0; padding-left: 15px; font-size: 12px; }
+        .issues-list li { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-color); }
+        .issues-list li:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        
+        .issue-title { color: var(--danger); font-weight: 700; display: block; margin-bottom: 3px; }
+        .investigation-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 8px 10px; border-radius: 6px; font-size: 11px; color: var(--text-main); display: flex; gap: 6px; margin-top: 6px; align-items: flex-start;}
+
+        @media (min-width: 993px) {
+            .right-panel .stats-grid-4 {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            #conclusionBox {
+                max-height: none !important;
+            }
+        }
+    </style>
+</head>
+<body id="app-body" class="body-tool">
+
+<header class="qcc-header">
+    <div id="live-time" class="live-time">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span id="live-time-text">Memuat waktu...</span>
+    </div>
+    <div class="header-title">Pareto Chart & Diagnostic Analysis</div>
+    <div class="header-controls">
+        <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+        <a href="../index.html" class="btn-header" title="Kembali ke Home">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </a>
+    </div>
+</header>
+
+<div class="main-wrapper-3col" id="capture-area">
+    
+    <div class="qcc-card left-panel">
+        <div class="panel-title">✍️ Data Kategori <span style="font-size: 10px; font-weight: normal; color: var(--text-muted); margin-left: 5px;">(Paste Excel)</span></div>
+        <div class="input-header">
+            <div>Kategori / Masalah</div>
+            <div>Frekuensi</div>
+        </div>
+        <div class="inputs-wrapper">
+            <div class="inputs" id="inputContainer" style="display: flex; flex-direction: column;"></div>
+        </div>
+        
+        <div class="btn-group" id="control-buttons">
+            <button class="qcc-btn btn-random" onclick="randomizeData()" title="Acak Data Observasi">🎲 Acak</button>
+            <button class="qcc-btn btn-export" id="exportBtn" onclick="exportFullPage()" title="Export Laporan Grafik & Statistik">📸 Export</button>
+            <button class="qcc-btn btn-reset" onclick="resetData()" title="Reset Semua Data Cacat">🗑️</button>
+        </div>
+
+        <div class="toggle-labels-container">
+            <input type="checkbox" id="showLabelsToggle" class="qcc-checkbox" onchange="toggleDataLabels()">
+            <label for="showLabelsToggle" style="font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);">🏷️ Tampilkan Label Data</label>
+        </div>
+
+        <div class="color-picker-container" id="color-picker">
+            <p>Tema Latar:</p>
+            <div class="color-options">
+                <div class="color-circle" style="background: #f8f9fa;" onclick="changeBgColor('#f8f9fa')" title="Terang"></div>
+                <div class="color-circle" style="background: #2b2d42;" onclick="changeBgColor('#2b2d42')" title="Gelap Malam"></div>
+                <div class="color-circle" style="background: #e0fbfc;" onclick="changeBgColor('#e0fbfc')" title="Biru Es"></div>
+                <div class="color-circle" style="background: #d8f3dc;" onclick="changeBgColor('#d8f3dc')" title="Hijau Mint"></div>
+                <div class="color-circle" style="background: #ffe5d9;" onclick="changeBgColor('#ffe5d9')" title="Peach Soft"></div>
+                <div class="color-circle" style="background: #7b2cbf;" onclick="changeBgColor('#7b2cbf')" title="Ungu Elegan"></div>
+            </div>
+        </div>
+
+        <div class="qcc-info-box" id="qccInfoBox" onclick="this.classList.toggle('active')">
+            <div class="qcc-info-header">📖 Fungsi Chart Ini</div>
+            <div class="qcc-info-content">
+                Pareto Chart (Diagram Pareto) didasarkan pada Prinsip 80/20 (Aturan Pareto) yang menyatakan bahwa sekitar 80% dampak/masalah ditimbulkan oleh 20% penyebab utama (Vital Few). Alat ini membantu kita mengidentifikasi dan memprioritaskan masalah dominan secara visual sehingga tindakan perbaikan menjadi jauh lebih terarah dan efisien.
+            </div>
+        </div>
+    </div>
+
+    <div class="qcc-card middle-panel">
+        <button class="btn-goto-input" onclick="scrollToInput()">✍️ Input / Edit Data</button>
+        <div class="panel-title" style="margin-bottom: 5px; border: none; padding: 0;">📈 Visualisasi Pareto Chart</div>
+        <div class="chart-container">
+            <canvas id="paretoChart"></canvas>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="qcc-card collapsible-card collapsed" style="padding: var(--space-md); margin-bottom: 0px;">
+            <div class="clickable-header" onclick="QCC.toggleCard(this)">
+                <div class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">📊 Ringkasan Statistik</div>
+                <span class="chevron">▼</span>
+            </div>
+            <div class="card-content" style="margin-top: 12px;">
+                <div class="stats-grid-4">
+                    <div class="stat-box">
+                        <div class="stat-title">Total Keseluruhan</div>
+                        <div class="stat-value" id="val-total">0</div>
+                    </div>
+                    <div class="stat-box highlight">
+                        <div class="stat-title">Masalah Dominan
+                            <span class="tooltip-container">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">Kategori dengan frekuensi kemunculan paling tinggi.</span>
+                            </span>
+                        </div>
+                        <div class="stat-value" id="val-dominant" style="color: var(--warning)">-</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Jumlah Kategori</div>
+                        <div class="stat-value" id="val-count">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">Rasio Vital (80%)
+                            <span class="tooltip-container">
+                                <span class="tooltip-icon">?</span>
+                                <span class="tooltip-text">Persentase jumlah kategori yang menyumbang kumulatif ~80% dari total masalah. Sesuai prinsip Pareto.</span>
+                            </span>
+                        </div>
+                        <div class="stat-value" id="val-ratio" style="color: var(--primary)">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="conclusion-box collapsible-card collapsed" id="conclusionBox" style="margin-top: var(--space-md);">
+            <div class="clickable-header" onclick="QCC.toggleCard(this)" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--glass-border); padding-bottom: 6px; margin-bottom: 8px;">
+                <div class="conclusion-title" id="conclusionIcon" style="margin-bottom: 0 !important; display: flex; align-items: center; gap: 6px;">💡 Menunggu Data</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Pareto Chart')">🔍 Fokus</button>
+                    <span class="chevron">▼</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="conclusion-text" id="conclusionText">
+                    Silakan input data observasi kategori dan frekuensi untuk memuat rekomendasi Root Cause Analysis (RCA).
+                </div>
+            </div>
+        </div>
+
+        <div class="qcc-card collapsible-card collapsed" style="margin-top: var(--space-md); padding: 12px 15px;">
+            <div class="clickable-header" onclick="QCC.toggleCard(this)" style="margin-bottom: 8px;">
+                <h4 class="panel-title" style="margin-bottom: 0; border: none; padding: 0; font-size: 12.5px; color: var(--primary); font-weight: 700; text-transform: uppercase;">🧮 Rumus Perhitungan</h4>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Pareto Chart')">🔍 Fokus</button>
+                    <span class="chevron">▼</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div id="formulaContainer">
+                <div class="formula-grid">
+                    <div class="formula-box">
+                        <div class="formula-name">Persentase Kontribusi Cacat</div>
+                        <div class="math-block">
+                            <span class="formula-term" data-tooltip="% Cacat adalah persentase kontribusi cacat dari kategori tertentu terhadap seluruh total cacat.">% Cacat</span>
+                            &nbsp;=&nbsp;
+                            <div class="math-frac">
+                                <span class="math-num"><span class="formula-term" data-tooltip="Frekuensi Kategori adalah jumlah kejadian atau kasus cacat yang terjadi pada satu kategori tertentu.">Frekuensi Kategori</span></span>
+                                <span class="math-den"><span class="formula-term" data-tooltip="Total Cacat adalah jumlah keseluruhan kejadian cacat dari semua kategori yang dimasukkan (N).">Total Cacat</span></span>
+                            </div>
+                            &nbsp;×&nbsp;
+                            <span class="formula-term" data-tooltip="100% adalah konstanta perkalian matematika untuk mengubah pecahan desimal menjadi bentuk persentase.">100%</span>
+                        </div>
+                        <div class="formula-desc">Mengukur seberapa besar porsi masalah yang disumbangkan oleh satu kategori spesifik terhadap total cacat keseluruhan.</div>
+                    </div>
+
+                    <div class="formula-box">
+                        <div class="formula-name">Persentase Kumulatif</div>
+                        <div class="math-block">
+                            <span class="formula-term" data-tooltip="Kumulatif % adalah penjumlahan persentase kontribusi secara bertahap dari kategori pertama hingga kategori saat ini.">Kumulatif %</span>
+                            &nbsp;=&nbsp;
+                            <span class="formula-term" data-tooltip="Σ (Sigma) mewakili lambang penjumlahan matematika untuk mengakumulasi nilai-nilai.">Σ</span>(% Cacat <span class="formula-term" data-tooltip="Kategori ke-1 s.d. j menunjukkan penjumlahan kumulatif dari kategori pertama berurutan sampai ke kategori j.">Kategori ke-1 s.d. j</span>)
+                        </div>
+                        <div class="formula-desc">Akumulasi persentase kontribusi cacat dari kategori terbesar hingga terkecil untuk menemukan kontribusi kumulatif.</div>
+                    </div>
+
+                    <div class="formula-box">
+                        <div class="formula-name">Rasio Vital Few</div>
+                        <div class="math-block">
+                            <span class="formula-term" data-tooltip="Rasio Vital Few adalah perbandingan antara jumlah kategori yang masuk kelompok Vital Few terhadap seluruh kategori.">Rasio</span>
+                            &nbsp;=&nbsp;
+                            <div class="math-frac">
+                                <span class="math-num">Jumlah Kategori <span class="formula-term" data-tooltip="Vital Few adalah segelintir kategori masalah terbesar (biasanya 20%) yang menyumbang dampak kegagalan terbesar (sekitar 80%).">Vital Few</span></span>
+                                <span class="math-den">Total Kategori</span>
+                            </div>
+                            &nbsp;×&nbsp;
+                            <span class="formula-term" data-tooltip="100% adalah konstanta perkalian matematika untuk mengubah pecahan desimal menjadi bentuk persentase.">100%</span>
+                        </div>
+                        <div class="formula-desc">Mengukur perbandingan jumlah kategori masalah utama (Vital Few) terhadap jumlah seluruh kategori cacat.</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px; border-top: 1px dashed var(--glass-border); padding-top: 8px; font-size: 11px; display: flex; flex-wrap: wrap; gap: 8px; color: var(--text-main);">
+                    <b>Glosarium Pareto:</b>
+                    <span class="formula-term" data-tooltip="Vital Few adalah segelintir kategori masalah terbesar yang paling kritis untuk diselesaikan terlebih dahulu.">Vital Few</span> |
+                    <span class="formula-term" data-tooltip="Trivial Many adalah banyak kategori masalah kecil lainnya di sisi kanan grafik yang bisa ditunda perbaikannya.">Trivial Many</span> |
+                    <span class="formula-term" data-tooltip="Prinsip 80/20 membantu tim fokus menyelesaikan 20% penyebab masalah untuk membabat 80% dampak kegagalan.">Prinsip 80/20</span>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../js/utils.js"></script>
+<script src="../js/chart-config.js"></script>
+<script src="../js/export.js"></script>
+<script>
+    // --- JAM LIVE SCRIPT ---
+    startLiveClock('live-time-text');
+
+    // --- VARIABEL ANIMASI ---
+    const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || ('ontouchstart' in window);
+    let originalFrequencies = [];
+    let originalPercents = [];
+    let floatAnimationTime = 0;
+    let floatInterval = null;
+
+    // --- INISIALISASI INPUT ---
+    const inputContainer = document.getElementById("inputContainer");
+    const maxRows = 10;
+    const defaultData = [
+        { label: "Goresan", freq: 55 },
+        { label: "Penyok", freq: 30 },
+        { label: "Retak", freq: 15 },
+        { label: "Kotor", freq: 8 },
+        { label: "Lain-lain", freq: 4 }
+    ];
+
+    for(let i = 1; i <= maxRows; i++) {
+        let row = document.createElement("div");
+        row.className = "input-row";
+
+        let labelInput = document.createElement("input");
+        labelInput.type = "text";
+        labelInput.className = "data-input";
+        labelInput.placeholder = "Kategori " + i;
+        if (i - 1 < defaultData.length) {
+            labelInput.value = defaultData[i - 1].label;
+        }
+        labelInput.oninput = updateChart;
+
+        let freqInput = document.createElement("input");
+        freqInput.type = "number";
+        freqInput.className = "data-input num";
+        freqInput.placeholder = "0";
+        freqInput.min = "0";
+        if (i - 1 < defaultData.length) {
+            freqInput.value = defaultData[i - 1].freq;
+        }
+        freqInput.oninput = updateChart;
+
+        row.appendChild(labelInput);
+        row.appendChild(freqInput);
+        inputContainer.appendChild(row);
+    }
+
+    // --- FITUR COPY-PASTE EXCEL ---
+    inputContainer.addEventListener('paste', function(e) {
+        QCC.handleParetoExcelPaste(e, '#inputContainer', updateChart);
+    });
+
+    // --- SETUP CHART ---
+    const ctx = document.getElementById("paretoChart").getContext("2d");
+    Chart.defaults.animation = false;
+
+    // --- VARIABLES FOR PLUGINS ---
+    let totalFreq = 0; // Script-level global variable for N
+
+    function getBarColors(count) {
+        let colors = [];
+        for (let i = 0; i < count; i++) {
+            if (i === 0) {
+                colors.push('#f97316'); // Orange for the highest bar
+            } else {
+                colors.push('#257fa8'); // Toyota Red for the others
+            }
+        }
+        return colors;
+    }
+
+    // --- CUSTOM PLUGINS FOR REVISIONS ---
+    const nLabelPlugin = {
+        id: 'nLabelPlugin',
+        afterDraw(chart) {
+            const { ctx, chartArea } = chart;
+            if (!chartArea || typeof totalFreq === 'undefined' || totalFreq === 0) return;
+            
+            ctx.save();
+            const isDark = document.body.classList.contains('dark-mode');
+            const fontSize = getChartFontSize(12);
+            ctx.font = 'bold ' + fontSize + 'px Poppins, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            const text = 'N = ' + totalFreq.toLocaleString();
+            const textWidth = ctx.measureText(text).width;
+            
+            const x = chartArea.left + 15;
+            const y = chartArea.top + 15;
+            
+            // Draw background badge for readability
+            ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 1;
+            
+            const padX = 8;
+            const padY = 4;
+            const rx = x - padX;
+            const ry = y - padY;
+            const rw = textWidth + padX * 2;
+            const rh = fontSize + padY * 2;
+            
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(rx, ry, rw, rh, 4);
+            } else {
+                ctx.rect(rx, ry, rw, rh);
+            }
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw text
+            ctx.fillStyle = isDark ? '#f8fafc' : '#111827';
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+    };
+
+    const barLabelsPlugin = {
+        id: 'barLabelsPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const show = document.getElementById("showLabelsToggle") && document.getElementById("showLabelsToggle").checked;
+            if (!show) return;
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                if (dataset.type !== 'bar') return;
+                
+                const meta = chart.getDatasetMeta(datasetIndex);
+                meta.data.forEach((bar, index) => {
+                    const val = dataset.data[index];
+                    if (val === undefined || val === null || val === 0) return;
+                    
+                    ctx.save();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold ' + getChartFontSize(11) + 'px Poppins, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    const x = bar.x;
+                    const y = bar.y + (bar.base - bar.y) / 2; // Center of the bar
+                    
+                    // If bar is too short, draw above the bar
+                    if (bar.base - bar.y < 20) {
+                        const isDark = document.body.classList.contains('dark-mode');
+                        ctx.fillStyle = isDark ? '#f8fafc' : '#111827';
+                        ctx.font = 'bold ' + getChartFontSize(10) + 'px Poppins, sans-serif';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText(val.toLocaleString(), x, bar.y - 4);
+                    } else {
+                        ctx.fillText(val.toLocaleString(), x, y);
+                    }
+                    ctx.restore();
+                });
+            });
+        }
+    };
+
+    const lineLabelsPlugin = {
+        id: 'lineLabelsPlugin',
+        afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            const show = document.getElementById("showLabelsToggle") && document.getElementById("showLabelsToggle").checked;
+            if (!show) return;
+
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                if (dataset.type !== 'line') return;
+                
+                const meta = chart.getDatasetMeta(datasetIndex);
+                meta.data.forEach((point, index) => {
+                    const val = dataset.data[index];
+                    if (val === undefined || val === null) return;
+                    
+                    ctx.save();
+                    const isDark = document.body.classList.contains('dark-mode');
+                    ctx.fillStyle = isDark ? '#f8fafc' : '#111827';
+                    ctx.font = 'bold ' + getChartFontSize(10) + 'px Poppins, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    
+                    const x = point.x;
+                    const y = point.y - 8;
+                    
+                    ctx.fillText(val.toFixed(1) + '%', x, y);
+                    ctx.restore();
+                });
+            });
+        }
+    };
+
+    const paretoLineOffsetPlugin = {
+        id: 'paretoLineOffsetPlugin',
+        beforeDatasetsDraw(chart) {
+            const lineMeta = chart.getDatasetMeta(0);
+            const barMeta = chart.getDatasetMeta(1);
+            
+            if (lineMeta && barMeta && lineMeta.data.length === barMeta.data.length) {
+                lineMeta.data.forEach((point, index) => {
+                    const bar = barMeta.data[index];
+                    if (bar) {
+                        point.x = bar.x + bar.width / 2;
+                    }
+                });
+            }
+        }
+    };
+
+    const topBorderPlugin = {
+        id: 'topBorderPlugin',
+        beforeDatasetsDraw(chart) {
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            
+            ctx.save();
+            const isDark = document.body.classList.contains('dark-mode');
+            ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(75, 85, 99, 0.35)';
+            ctx.lineWidth = 2.5;
+            
+            ctx.beginPath();
+            ctx.rect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+            ctx.stroke();
+            ctx.restore();
+        }
+    };
+
+    let paretoChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'Kumulatif (%)',
+                    data: [],
+                    borderColor: '#ef233c',
+                    backgroundColor: '#ef233c',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y1',
+                    order: 1
+                },
+                {
+                    type: 'bar',
+                    label: 'Frekuensi',
+                    data: [],
+                    backgroundColor: '#257fa8',
+                    borderRadius: 0,
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0,
+                    yAxisID: 'y',
+                    order: 2
+                }
+            ]
+        },
+        options: {
+            animation: false,
+            animations: false,
+            transitions: {
+                active: {
+                    animation: {
+                        duration: 0
+                    }
+                }
+            },
+            ...getDefaultChartOptions(isMobileDevice),
+            animation: false,
+            animations: false,
+            transitions: {
+                active: { animation: { duration: 0 } },
+                resize: { animation: { duration: 0 } }
+            },
+            plugins: {
+                ...getDefaultChartOptions(isMobileDevice).plugins,
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(0,0,0,0.85)', padding: 10, cornerRadius: 8, 
+                    titleFont: {family: "'Poppins', sans-serif", size: getChartFontSize(12)}, 
+                    bodyFont: {family: "'Poppins', sans-serif", size: getChartFontSize(11)},
+                    callbacks: {
+                        label: function(context) {
+                            if(context.datasetIndex === 0) {
+                                let origY = originalPercents[context.dataIndex];
+                                return `Kumulatif: ${origY !== undefined ? origY.toFixed(1) + '%' : ''}`;
+                            } else {
+                                let origY = originalFrequencies[context.dataIndex];
+                                return `Frekuensi: ${origY !== undefined ? origY : ''}`;
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { 
+                        color: '#111827', 
+                        font: {family: "'Poppins', sans-serif", size: getChartFontSize(10)}, 
+                        maxRotation: 30, 
+                        minRotation: 0,
+                        maxTicksLimit: getMaxTicksLimit(),
+                        autoSkip: true
+                    } 
+                },
+                y: { 
+                    type: 'linear', position: 'left', 
+                    title: { display: true, text: 'Frekuensi', font: {family: "'Poppins', sans-serif", size: getChartFontSize(11)}, color: '#4b5563' },
+                    grid: { color: 'rgba(0,0,0,0.05)', borderDash: [4, 4] }, 
+                    ticks: { 
+                        color: '#111827', 
+                        font: {family: "'Poppins', sans-serif", size: getChartFontSize(10)}, 
+                        beginAtZero: true,
+                        maxTicksLimit: getMaxTicksLimit()
+                    } 
+                },
+                y1: { 
+                    type: 'linear', position: 'right', 
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: 'Persentase (%)', font: {family: "'Poppins', sans-serif", size: getChartFontSize(11)}, color: '#4b5563' },
+                    grid: { drawOnChartArea: false }, 
+                    ticks: { 
+                        color: '#111827', 
+                        font: {family: "'Poppins', sans-serif", size: getChartFontSize(10)}, 
+                        stepSize: 20, 
+                        callback: function(value) { return value + "%" } 
+                    }
+                }
+            }
+        },
+        plugins: [
+            nLabelPlugin,
+            barLabelsPlugin,
+            lineLabelsPlugin,
+            paretoLineOffsetPlugin,
+            topBorderPlugin
+        ]
+    });
+
+    // Render chart with default data on load
+    updateChart();
+
+    // --- ANIMASI FLOATING ---
+    function startFloatingEffect() {
+        if(floatInterval) clearInterval(floatInterval);
+        return;
+    }
+
+    function updateChart() {
+        let inputRows = document.querySelectorAll(".input-row");
+        let rawData = [];
+
+        // Simpan ke localStorage
+        const categoriesData = [];
+        inputRows.forEach(row => {
+            categoriesData.push({
+                label: row.children[0].value,
+                freq: row.children[1].value
+            });
+        });
+        saveToStorage('pareto', categoriesData);
+
+        let hasNegativeFreq = false;
+        let hasInvalidNumber = false;
+
+        inputRows.forEach(row => {
+            let label = row.children[0].value.trim();
+            let freqStr = row.children[1].value;
+            
+            if(freqStr !== "") {
+                let freq = safeParseNumber(freqStr);
+                if (freq === null) {
+                    hasInvalidNumber = true;
+                } else if (freq < 0) {
+                    hasNegativeFreq = true;
+                } else if (freq > 0 && label !== "") {
+                    rawData.push({ label: label, freq: freq });
+                }
+            }
+        });
+
+        // Grouping berdasarkan nama kategori (case-insensitive & trim)
+        let groupedMap = new Map();
+        rawData.forEach(item => {
+            let cleanLabel = item.label.trim();
+            let lowerLabel = cleanLabel.toLowerCase();
+            if (groupedMap.has(lowerLabel)) {
+                let existing = groupedMap.get(lowerLabel);
+                existing.freq += item.freq;
+            } else {
+                groupedMap.set(lowerLabel, {
+                    label: cleanLabel, // Simpan casing pertama yang ditemui
+                    freq: item.freq
+                });
+            }
+        });
+        rawData = Array.from(groupedMap.values());
+
+        const box = document.getElementById("conclusionBox");
+        const icon = document.getElementById("conclusionIcon");
+        const text = document.getElementById("conclusionText");
+
+        if (hasNegativeFreq) {
+            box.className = "conclusion-box danger";
+            icon.innerHTML = "⚠️ Kesalahan Input Frekuensi";
+            text.innerHTML = "Nilai frekuensi cacat tidak boleh bernilai negatif. Mohon periksa kembali.";
+            resetStats();
+            paretoChart.data.labels = [];
+            paretoChart.data.datasets[0].data = [];
+            paretoChart.data.datasets[1].data = [];
+            if(floatInterval) clearInterval(floatInterval);
+            paretoChart.update('none');
+            return;
+        }
+
+        if (hasInvalidNumber) {
+            box.className = "conclusion-box warning";
+            icon.innerHTML = "⚠️ Input Tidak Valid";
+            text.innerHTML = "Ada input frekuensi yang bukan angka. Periksa kembali data yang dimasukkan.";
+            resetStats();
+            paretoChart.data.labels = [];
+            paretoChart.data.datasets[0].data = [];
+            paretoChart.data.datasets[1].data = [];
+            if(floatInterval) clearInterval(floatInterval);
+            paretoChart.update('none');
+            return;
+        }
+
+        if(rawData.length === 0) {
+            resetStats();
+            paretoChart.data.labels = [];
+            paretoChart.data.datasets[0].data = [];
+            paretoChart.data.datasets[1].data = [];
+            if(floatInterval) clearInterval(floatInterval);
+            paretoChart.update('none');
+            updateConclusion(rawData, 0);
+            return;
+        }
+
+        // Sorting Pareto (Besar ke Kecil)
+        rawData.sort((a, b) => b.freq - a.freq);
+
+        totalFreq = rawData.reduce((sum, item) => sum + item.freq, 0);
+        let labels = [];
+        let freqs = [];
+        let cumPercents = [];
+        let cumSum = 0;
+
+        rawData.forEach(item => {
+            labels.push(item.label);
+            freqs.push(item.freq);
+            cumSum += item.freq;
+            cumPercents.push((cumSum / totalFreq) * 100);
+        });
+
+        originalFrequencies = [...freqs];
+        originalPercents = [...cumPercents];
+
+        // Update Stats
+        document.getElementById("val-total").innerText = totalFreq.toLocaleString();
+        document.getElementById("val-dominant").innerText = labels[0];
+        document.getElementById("val-count").innerText = rawData.length;
+
+        // Vital Few Ratio: Berapa % dari item yg mencakup ~80% masalah
+        let vitalCount = cumPercents.filter(p => p <= 80).length;
+        if(vitalCount === 0 && rawData.length > 0) vitalCount = 1; // Minimal 1
+        let ratio = (vitalCount / rawData.length) * 100;
+        document.getElementById("val-ratio").innerText = ratio.toFixed(0) + "%";
+
+        // Konfigurasi sumbu Y kiri (maksimum diset sama dengan total)
+        paretoChart.options.scales.y.max = totalFreq;
+
+        paretoChart.data.labels = labels;
+        paretoChart.data.datasets[1].data = freqs; // Bar
+        
+        // Dynamically update bar background colors
+        paretoChart.data.datasets[1].backgroundColor = getBarColors(rawData.length);
+        
+        paretoChart.data.datasets[0].data = cumPercents; // Line
+
+        startFloatingEffect();
+        updateConclusion(rawData, totalFreq, cumPercents);
+
+        paretoChart.options.plugins.qccDataLabels.enabled = false;
+        paretoChart.update('none');
+    }
+
+    function analyzePareto(data, totalFreq, cumPercents) {
+        if (!data || data.length === 0) return null;
+
+        let vitalFewData = [];
+        let vitalIdx = 0;
+        
+        while (vitalIdx < data.length && (vitalIdx === 0 || cumPercents[vitalIdx-1] < 80)) {
+            vitalFewData.push(data[vitalIdx].label);
+            vitalIdx++;
+        }
+
+        let vitalPercentage = cumPercents[vitalIdx - 1];
+        let totalCategories = data.length;
+        let vitalCount = vitalFewData.length;
+
+        let pattern = 'vital';
+        let title = '';
+        let html = '';
+
+        if (totalCategories >= 2 && cumPercents[0] >= 70) {
+            pattern = 'danger';
+            title = `🔥 Fokus Biang Kerok!`;
+            html = `
+                <div style="font-size: 13px; line-height: 1.6; color: var(--text);">
+                    Jangan buang waktu ngurusin masalah kecil yang lain. Fokus perbaiki NG <b>"${data[0].label}"</b> yang tiangnya paling tinggi di grafik ini (dominan <b>${cumPercents[0].toFixed(1)}%</b>). Ini biang kerok utama yang bikin <i>line stop</i> paling parah di shift ini. Beresin mesin ini dulu, target produksi pasti aman!
+                </div>
+            `;
+        } else if (vitalCount <= Math.ceil(totalCategories * 0.4) && totalCategories >= 3) {
+            pattern = 'warning';
+            title = `🎯 Sikat Masalah Utama!`;
+            html = `
+                <div style="font-size: 13px; line-height: 1.6; color: var(--text);">
+                    Ada ${totalCategories} jenis NG, tapi penyumbang terbesarnya cuma ${vitalCount} jenis ini: ${vitalFewData.map(v => `<b>"${v}"</b>`).join(', ')}. Fokus bongkar mesin & cek <i>Henkaten</i> (4M) buat ${vitalCount} NG ini aja! Abaikan yang lain dulu. Beresin masalah ini, efisiensi <i>line</i> bakal langsung naik tajam.
+                </div>
+            `;
+        } else {
+            pattern = 'info';
+            title = `⚠️ NG Tersebar Rata!`;
+            html = `
+                <div style="font-size: 13px; line-height: 1.6; color: var(--text);">
+                    Kurvanya naik pelan, artinya jumlah NG-nya rata dan gak ada yang dominan. Susah cari biang kerok utama. Coba cek lagi cara nulis laporan NG-nya jangan terlalu spesifik, atau emang kondisi mesin/line secara umum lagi <i>down</i>. Lakukan pembersihan besar (5S) atau panggil maintenance buat cek total area ini.
+                </div>
+            `;
+        }
+
+        return { pattern, title, html };
+    }
+
+    function updateConclusion(data, totalFreq, cumPercents) {
+        const box = document.getElementById("conclusionBox");
+        if (!box) return;
+
+        if (data.length === 0) {
+            box.className = "conclusion-box collapsible-card";
+            box.innerHTML = `
+                <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                    <span class="conclusion-icon">💡 Menunggu Data</span>
+                    <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                </div>
+                <div class="conclusion-content collapsible-content">
+                    <div class="conclusion-text">Silakan masukkan data observasi nama kategori dan frekuensi cacat untuk melihat analisis strategi prioritas perbaikan (RCA).</div>
+                </div>
+            `;
+            return;
+        }
+
+        let analysis = analyzePareto(data, totalFreq, cumPercents);
+        const isCollapsed = box.classList.contains("collapsed");
+
+        box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} ${analysis.pattern}`;
+        box.innerHTML = `
+            <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                <span class="conclusion-icon">${analysis.title}</span>
+                <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+            </div>
+            <div class="conclusion-content collapsible-content">
+                <div class="conclusion-text">${analysis.html}</div>
+                <button class="qcc-btn btn-focus-trigger" onclick="QCC.openFocusModal()" style="margin-top: var(--space-md); width: 100%;"><i class="fas fa-expand-arrows-alt"></i> Buka Layar Penuh</button>
+            </div>
+        `;
+    }
+
+    function randomizeData() {
+        let inputRows = document.querySelectorAll(".input-row");
+        const categories = ["Goresan", "Penyok", "Retak", "Kotor", "Dimensi NG", "Bocor", "Cat Mengelupas", "Burr", "Karat", "Lain-lain"];
+        
+        // Acak jumlah data yang mau diisi (5 sampai 10)
+        let numData = Math.floor(Math.random() * 6) + 5;
+        
+        // Tentukan pola acak secara merata: 0 = Vital Few, 1 = Ekstrem, 2 = Flat
+        let patternType = Math.floor(Math.random() * 3);
+        
+        let freqs = [];
+        if (patternType === 0) {
+            // Pola Vital Few (1-2 item mendominasi)
+            for (let i = 0; i < numData; i++) {
+                if (i === 0) freqs.push(Math.floor(Math.random() * 40) + 60); // 60 - 100
+                else if (i === 1) freqs.push(Math.floor(Math.random() * 20) + 25); // 25 - 45
+                else freqs.push(Math.floor(Math.random() * 8) + 1); // 1 - 9
+            }
+        } else if (patternType === 1) {
+            // Pola Ekstrem (1 item super dominan)
+            for (let i = 0; i < numData; i++) {
+                if (i === 0) freqs.push(Math.floor(Math.random() * 50) + 90); // 90 - 140
+                else freqs.push(Math.floor(Math.random() * 4) + 1); // 1 - 5
+            }
+        } else {
+            // Pola Flat (Merata)
+            for (let i = 0; i < numData; i++) {
+                freqs.push(Math.floor(Math.random() * 30) + 30); // 30 - 60
+            }
+        }
+        
+        inputRows.forEach((row, i) => {
+            if(i < numData) {
+                row.children[0].value = categories[i];
+                row.children[1].value = freqs[i];
+            } else {
+                row.children[0].value = "";
+                row.children[1].value = "";
+            }
+        });
+        updateChart();
+    }
+
+    function resetStats() {
+        document.getElementById("val-total").innerText = "0";
+        document.getElementById("val-dominant").innerText = "-";
+        document.getElementById("val-count").innerText = "0";
+        document.getElementById("val-ratio").innerText = "0%";
+    }
+
+    function resetData() {
+        if (!confirm("Yakin ingin reset semua data dan parameter?")) return;
+        document.querySelectorAll(".input-row input").forEach(input => input.value = "");
+        resetStats();
+        originalFrequencies = [];
+        originalPercents = [];
+        if(floatInterval) clearInterval(floatInterval);
+        paretoChart.data.labels = [];
+        paretoChart.data.datasets.forEach(ds => ds.data = []);
+        delete paretoChart.options.scales.y.max;
+        paretoChart.update('none');
+        clearStorage('pareto');
+
+        const box = document.getElementById("conclusionBox");
+        box.classList.remove('success', 'danger', 'warning');
+        document.getElementById("conclusionIcon").innerHTML = "💡 Menunggu Data";
+        document.getElementById("conclusionText").innerHTML = "Silakan input data observasi kategori dan frekuensi untuk memuat rekomendasi Root Cause Analysis (RCA).";
+    }
+
+    function changeBgColor(colorHex) {
+        QCC.changeBgColor(colorHex, paretoChart, 'pareto_bg');
+    }
+
+    function toggleTheme() {
+        QCC.toggleTheme(paretoChart, 'pareto_bg');
+    }
+
+    function toggleDataLabels() {
+        const show = document.getElementById("showLabelsToggle").checked;
+        saveToStorage('pareto_showLabels', show);
+        updateChart();
+    }
+
+    (function initThemeAndData() {
+        const savedTheme = localStorage.getItem('theme');
+        const savedBg = localStorage.getItem('pareto_bg') || (savedTheme === 'dark' ? '#2b2d42' : '#f8f9fa');
+        changeBgColor(savedBg);
+
+        const savedShowLabels = loadFromStorage('pareto_showLabels') === true;
+        document.getElementById("showLabelsToggle").checked = savedShowLabels;
+
+        const saved = loadFromStorage('pareto');
+        if (saved && Array.isArray(saved)) {
+            const inputRows = document.querySelectorAll(".input-row");
+            saved.forEach((item, i) => {
+                if (i < inputRows.length) {
+                    inputRows[i].children[0].value = item.label || "";
+                    inputRows[i].children[1].value = item.freq !== undefined ? item.freq : "";
+                }
+            });
+        }
+        
+        updateChart();
+    })();
+
+    async function exportFullPage() {
+        await exportPageAsPNG({
+            exportBtnId: 'exportBtn',
+            fileName: 'Laporan-Pareto-Chart.png',
+            chartInstance: paretoChart
+        });
+    }
+</script>
+
+<!-- Bottom Navigation Mobile -->
+<nav class="bottom-nav">
+    <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
+    <a href="scatter.html" class="bnav-item" title="Scatter">📈<span>Scatter</span></a>
+    <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
+    <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
+    <a href="pareto.html" class="bnav-item active" title="Pareto">📋<span>Pareto</span></a>
+</nav>
+<script src="/js/chatbot.js" defer></script>
+</body>
+</html>

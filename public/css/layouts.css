@@ -1,0 +1,397 @@
+/* =============================================
+   QCC Layouts — Layout Patterns & Responsive
+   ============================================= */
+
+/* ===== BODY BASE (Anti horizontal scroll & zoom-out whitespace) ===== */
+html, body {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box !important;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+/* ===== TOOL PAGE BODY (Height-locked desktop) ===== */
+.body-tool {
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-xl);
+}
+
+/* ===== MAIN WRAPPER — 2 Panel ===== */
+.main-wrapper-2col {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: var(--space-lg);
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+}
+
+/* ===== MAIN WRAPPER — 3 Panel ===== */
+.main-wrapper-3col {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 310px 1fr 380px;
+    gap: var(--space-xl);
+    max-width: 1800px;
+    margin: 0 auto;
+    width: 100%;
+    min-height: 0;
+}
+
+/* ===== RIGHT PANEL ===== */
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.right-panel > * {
+    flex-shrink: 0 !important;
+}
+
+.right-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.right-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.right-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+}
+
+body.dark-mode .right-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ===== STATS GRID ===== */
+.stats-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); flex-shrink: 0; }
+.stats-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-md); flex-shrink: 0; }
+.stats-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); flex-shrink: 0; }
+.stats-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-md); flex-shrink: 0; }
+
+/* ===== CHART WRAPPER ===== */
+.chart-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-lg);
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-md);
+    width: 100%;
+    overflow: hidden;
+}
+.chart-container {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ===== INPUT SCROLL WRAPPER ===== */
+.inputs-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 5px;
+    margin-bottom: var(--space-md);
+}
+.inputs-wrapper::-webkit-scrollbar { width: 5px; }
+.inputs-wrapper::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+
+.inputs-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-sm); }
+.inputs-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-sm); }
+
+/* ===== TABLE WRAPPERS (Desktop constrained scrolling) ===== */
+.table-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-md);
+    overflow: hidden;
+}
+.table-scroll-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.table-scroll-wrapper::-webkit-scrollbar { width: 5px; height: 5px; }
+.table-scroll-wrapper::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+
+/* ===== PARAMETER GRID ===== */
+.manual-params-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    background: var(--result-bg);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--glass-border);
+    margin: 0 var(--space-xs) var(--space-md) var(--space-xs);
+}
+
+/* ===== GOTO INPUT BUTTON (Mobile only) ===== */
+.btn-goto-input {
+    display: none !important;
+}
+
+/* =============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================= */
+
+/* --- Tablet Landscape (≤992px) --- */
+@media screen and (max-width: 992px) {
+    .body-tool {
+        width: 100% !important;
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+        height: auto;
+        min-height: 100svh;
+        overflow-y: auto;
+        overflow-x: hidden !important;
+        padding: var(--space-md);
+        padding-bottom: calc(75px + env(safe-area-inset-bottom));
+    }
+
+    .qcc-header {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 var(--space-lg);
+        height: 54px;
+        margin-bottom: var(--space-md);
+        border-radius: var(--radius-md);
+        position: relative;
+    }
+    .qcc-header .live-time {
+        display: none !important; /* Sembunyikan live time pada breakpoint tablet */
+    }
+    .qcc-header .header-title {
+        position: static;
+        transform: none;
+        font-size: var(--font-size-md);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 60%;
+        text-align: left;
+        margin: 0;
+        flex: 1;
+    }
+    .qcc-header .header-controls {
+        position: static;
+        display: flex;
+        gap: var(--space-sm);
+        align-items: center;
+        flex: none;
+    }
+
+    .main-wrapper-2col,
+    .main-wrapper-3col {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        gap: var(--space-md) !important;
+        min-height: auto !important;
+    }
+
+    .qcc-card,
+    .left-panel,
+    .middle-panel,
+    .right-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* CSS Order to prioritize Chart > Stats/Conclusion > Inputs on mobile/tablet */
+    .middle-panel {
+        order: 1 !important;
+    }
+    .right-panel {
+        order: 2 !important;
+    }
+    .left-panel {
+        order: 3 !important;
+    }
+
+    .inputs-wrapper { 
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        max-height: 280px; 
+    }
+    .chart-wrapper,
+    .middle-panel { 
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        min-height: 320px; 
+        flex: none; 
+    }
+    .chart-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .conclusion-box { max-height: none; overflow: visible; }
+    .stats-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid-3 > div:last-child { grid-column: span 2; }
+    .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid-5 { grid-template-columns: repeat(3, 1fr); }
+
+    .btn-goto-input {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        align-self: flex-start;
+        background-color: var(--theme-tint, rgba(37, 127, 168, 0.15)) !important;
+        color: var(--theme-color, #257fa8) !important;
+        border: 1px solid var(--theme-color, #257fa8) !important;
+        padding: 6px 12px !important;
+        border-radius: 20px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        margin-bottom: 12px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: var(--shadow-sm) !important;
+        width: auto !important;
+    }
+    .btn-goto-input:hover, .btn-goto-input:active {
+        background-color: var(--theme-color, #257fa8) !important;
+        color: #ffffff !important;
+    }
+}
+
+/* --- Tablet Portrait (≤768px) --- */
+@media screen and (max-width: 768px) {
+    .bottom-nav {
+        display: flex;
+    }
+    .body-tool {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom));
+    }
+    .data-input {
+        min-height: 46px;
+        font-size: var(--font-size-base);
+    }
+    .qcc-btn {
+        min-height: 46px;
+        font-size: var(--font-size-base);
+    }
+}
+
+/* --- Mobile (≤576px) --- */
+@media screen and (max-width: 576px) {
+    .qcc-header .live-time {
+        display: none !important; /* Hide clock on mobile to prevent overlapping */
+    }
+    .qcc-header .header-title {
+        position: static;
+        transform: none;
+        max-width: 60%;
+        font-size: var(--font-size-base);
+        text-align: left;
+    }
+    .qcc-header {
+        padding: 0 var(--space-md);
+    }
+
+    .chart-wrapper { min-height: clamp(280px, 58vw, 380px); height: clamp(280px, 58vw, 380px); padding: var(--space-md); }
+    .chart-container { min-height: clamp(240px, 52vw, 340px); }
+    .stats-grid-3 { grid-template-columns: 1fr 1fr; }
+    .stats-grid-3 > div:last-child { grid-column: span 2; }
+    .stats-grid-4 { grid-template-columns: 1fr 1fr; }
+    .stats-grid-5 { grid-template-columns: 1fr 1fr; }
+    .stats-grid-5 > div:last-child { grid-column: span 2; }
+
+    .inputs-grid-4 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* --- Small Phone (≤430px) --- */
+@media screen and (max-width: 430px) {
+    .body-tool {
+        width: 100% !important;
+        max-width: 100vw !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        padding: 8px;
+        padding-bottom: calc(75px + env(safe-area-inset-bottom));
+    }
+    .inputs-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .inputs-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .stat-value { font-size: var(--font-size-base); }
+
+    .manual-params-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        margin: 0 0 var(--space-md) 0 !important;
+    }
+    .manual-params-grid > div:last-child {
+        grid-column: span 2 !important;
+    }
+}
+
+/* --- Very Small Phone (≤360px) --- */
+@media screen and (max-width: 360px) {
+    .qcc-header {
+        padding: 0 var(--space-xs);
+    }
+    .qcc-header .header-title {
+        font-size: var(--font-size-sm);
+        max-width: 55%;
+    }
+    .bottom-nav {
+        height: 54px;
+    }
+    .data-input {
+        padding: 8px 4px !important;
+    }
+    .bnav-item {
+        font-size: 18px;
+        min-width: 44px;
+        padding: 2px 4px;
+    }
+    .bnav-item span {
+        font-size: 10px !important;
+    }
+}

@@ -1,0 +1,329 @@
+/* =============================================
+   QCC AI Chatbot — Visual Styles (Glassmorphism)
+   ============================================= */
+
+/* ===== FLOATING WIDGET CONTAINER ===== */
+#qcc-chatbot-widget {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 380px;
+    height: 500px;
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
+    overflow: hidden;
+    transform: scale(0.8) translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#qcc-chatbot-widget.qcc-active {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+/* ===== CHAT HEADER ===== */
+.qcc-chatbot-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.qcc-chatbot-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qcc-chatbot-header-info span {
+    font-size: 22px;
+}
+
+.qcc-chatbot-header-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.qcc-chatbot-header-title {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.2;
+    color: #ffffff;
+}
+
+.qcc-chatbot-header-status {
+    font-size: 11px;
+    opacity: 0.85;
+    color: #e0f2fe;
+    margin-top: 2px;
+}
+
+.qcc-chatbot-close-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.qcc-chatbot-close-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: scale(1.05);
+}
+
+/* ===== CHAT MESSAGES HISTORY AREA ===== */
+.qcc-chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.qcc-chatbot-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+.qcc-chatbot-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.qcc-chatbot-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+body.dark-mode .qcc-chatbot-messages::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== MESSAGE BUBBLES ===== */
+.qcc-chat-message {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    word-break: break-word;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.qcc-chat-message.bot {
+    align-self: flex-start;
+    background: var(--result-bg);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--glass-border);
+}
+
+/* ===== CHAT LISTS AND BULLET POINTS ===== */
+.qcc-chat-message ul,
+.qcc-chat-message ol {
+    padding-left: 20px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    list-style-position: outside;
+}
+
+.qcc-chat-message li {
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+
+.qcc-chat-message li:last-child {
+    margin-bottom: 0;
+}
+
+.qcc-chat-message.user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+/* ===== TYPING INDICATOR ===== */
+.qcc-chat-message.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+}
+
+.qcc-chat-message.loading .dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.qcc-chat-message.loading .dot {
+    width: 6px;
+    height: 6px;
+    background-color: var(--text-muted);
+    border-radius: 50%;
+    animation: qcc-chat-bounce 1.4s infinite ease-in-out both;
+}
+
+.qcc-chat-message.loading .dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.qcc-chat-message.loading .dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes qcc-chat-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* ===== CHAT INPUT AREA ===== */
+.qcc-chatbot-input-container {
+    padding: 12px 18px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--glass-border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.qcc-chatbot-input-container input {
+    flex: 1;
+    background: var(--input-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.qcc-chatbot-input-container input:focus {
+    border-color: var(--primary);
+}
+
+.qcc-chatbot-input-container button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.qcc-chatbot-input-container button:hover {
+    background: var(--primary-hover);
+}
+
+.qcc-chatbot-input-container button:active {
+    transform: scale(0.95);
+}
+
+/* ===== FLOATING TRIGGER BUTTON (FAB) ===== */
+.chatbot-trigger-btn {
+    position: fixed !important;
+    bottom: 25px !important;
+    right: 25px !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover)) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    font-size: 22px !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chatbot-trigger-btn:hover {
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+/* ===== RESPONSIVENESS AND MOBILE ADAPTATIONS ===== */
+@media screen and (max-width: 768px) {
+    /* Position trigger button securely on mobile (aligned horizontally with Coba Yuk button on home page) */
+    .chatbot-trigger-btn {
+        bottom: 20px !important;
+        right: 5vw !important;
+        width: 46px !important;
+        height: 46px !important;
+        font-size: 20px !important;
+        z-index: 9999 !important;
+    }
+
+    /* Shift floating trigger button above bottom-nav when it exists on mobile subpages */
+    body:has(.bottom-nav) .chatbot-trigger-btn {
+        bottom: 80px !important;
+    }
+
+    /* Responsive Chat window on mobile viewports */
+    #qcc-chatbot-widget {
+        width: 90vw !important;
+        height: 80vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        bottom: 80px !important;
+        right: 5vw !important;
+        left: auto !important;
+        z-index: 100000 !important; /* Keep above all elements */
+        border-radius: var(--radius-md) !important;
+    }
+
+    /* Shift chat window above bottom-nav and shifted FAB when it exists on mobile subpages */
+    body:has(.bottom-nav) #qcc-chatbot-widget {
+        bottom: 140px !important;
+    }
+}
+
+/* Mobile Dropdown Custom Item Style */
+.hamburger-chatbot-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.hamburger-chatbot-item:hover {
+    background-color: var(--theme-tint, rgba(37, 127, 168, 0.1));
+}

@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control Chart & Diagnostic Analysis</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/design-tokens.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layouts.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <style>
+        /* --- Page-specific overrides --- */
+        @media (min-width: 993px) {
+            .stat-value {
+                font-size: var(--font-size-lg) !important;
+            }
+
+            .right-panel .stats-grid-5 {
+                grid-template-columns: 1fr 1fr !important;
+            }
+
+            .right-panel .stats-grid-5>div:nth-child(5) {
+                grid-column: span 2 !important;
+            }
+
+            #conclusionBox {
+                max-height: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body id="app-body" class="body-tool">
+
+    <header class="qcc-header">
+        <div id="live-time" class="live-time">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="live-time-text">Memuat waktu...</span>
+        </div>
+
+        <div class="header-title">Control Chart & Diagnostic Analysis</div>
+
+        <div class="header-controls">
+            <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+            <a href="../index.html" class="btn-header" title="Kembali ke Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-wrapper-3col">
+
+        <div class="qcc-card left-panel">
+            <h3 class="panel-title">✍️ Data Observasi <span
+                    style="font-size: 12px; font-weight: normal; color: var(--text-muted);">(Bisa Paste Excel)</span>
+            </h3>
+
+            <div class="inputs-wrapper">
+                <div class="inputs-grid-3" id="inputContainer"></div>
+            </div>
+
+            <h3 class="panel-title">⚙️ Parameter Manual <span
+                    style="font-size: 12px; font-weight: normal; color: var(--text-muted);">(Opsional)</span></h3>
+            <div class="manual-params-grid">
+                <div>
+                    <label
+                        style="font-size: 12px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 2px; color: var(--danger);">
+                        UCL
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Batas Atas Wajar (UCL): Batas nilai tertinggi yang masih dianggap
+                                normal. Jika ada hasil produksi di atas batas ini, berarti ada masalah/kesalahan pada
+                                proses.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="inputUCL" class="data-input" placeholder="Max" oninput="updateChart()">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 12px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 2px; color: var(--danger);">
+                        LCL
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Batas Bawah Wajar (LCL): Batas nilai terendah yang masih dianggap
+                                normal. Jika ada hasil produksi di bawah batas ini, berarti ada masalah/kesalahan pada
+                                proses.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="inputLCL" class="data-input" placeholder="Min" oninput="updateChart()">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 12px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 4px; margin-bottom: 2px; color: var(--success);">
+                        CL
+                        <span class="tooltip-container">
+                            <span class="tooltip-icon">?</span>
+                            <span class="tooltip-text">Garis Target/Tengah (CL): Nilai tengah rata-rata atau standar
+                                ideal yang ingin dicapai dalam kondisi normal.</span>
+                        </span>
+                    </label>
+                    <input type="number" id="inputCL" class="data-input" placeholder="Mid" oninput="updateChart()">
+                </div>
+            </div>
+
+            <div class="btn-group" id="control-buttons">
+                <button class="qcc-btn btn-random" onclick="randomizeData()"
+                    title="Acak Data Observasi & Batas Kontrol">🎲 Acak</button>
+                <button class="qcc-btn btn-export" id="exportBtn" onclick="exportFullPage()"
+                    title="Export Laporan Grafik & Parameter">📸 Export</button>
+                <button class="qcc-btn btn-reset" onclick="resetData()"
+                    title="Reset Semua Data & Parameter">🗑️</button>
+            </div>
+
+            <div class="toggle-labels-container">
+                <input type="checkbox" id="showLabelsToggle" class="qcc-checkbox" onchange="toggleDataLabels()">
+                <label for="showLabelsToggle"
+                    style="font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);">🏷️ Tampilkan Label
+                    Data</label>
+            </div>
+
+            <div class="color-picker-container" id="color-picker">
+                <p>Tema Latar:</p>
+                <div class="color-options">
+                    <div class="color-circle" style="background: #f8f9fa;" onclick="changeBgColor('#f8f9fa')"
+                        title="Terang"></div>
+                    <div class="color-circle" style="background: #2b2d42;" onclick="changeBgColor('#2b2d42')"
+                        title="Gelap Malam"></div>
+                    <div class="color-circle" style="background: #e0fbfc;" onclick="changeBgColor('#e0fbfc')"
+                        title="Biru Es"></div>
+                    <div class="color-circle" style="background: #d8f3dc;" onclick="changeBgColor('#d8f3dc')"
+                        title="Hijau Mint"></div>
+                    <div class="color-circle" style="background: #ffe5d9;" onclick="changeBgColor('#ffe5d9')"
+                        title="Peach Soft"></div>
+                    <div class="color-circle" style="background: #7b2cbf;" onclick="changeBgColor('#7b2cbf')"
+                        title="Ungu Elegan"></div>
+                </div>
+            </div>
+
+            <div class="qcc-info-box" id="qccInfoBox" onclick="this.classList.toggle('active')">
+                <div class="qcc-info-header">📖 Fungsi Chart Ini</div>
+                <div class="qcc-info-content">
+                    Control Chart (Peta Kendali) digunakan untuk memantau stabilitas suatu proses dari waktu ke waktu
+                    dan membedakan antara Variasi Penyebab Umum (Common Cause) yang wajar serta Variasi Penyebab Khusus
+                    (Special Cause) yang memerlukan tindakan koreksi cepat sebelum produk cacat terproduksi.
+                </div>
+            </div>
+        </div>
+
+        <div class="qcc-card middle-panel">
+            <button class="btn-goto-input" onclick="QCC.scrollToElement('.left-panel')">✍️ Input / Edit Data</button>
+            <h3 class="panel-title" style="color: var(--text);">📈 Visualisasi Control Chart</h3>
+            <div class="chart-container">
+                <canvas id="controlChart"></canvas>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="qcc-card collapsible-card collapsed" style="padding: var(--space-md); margin-bottom: 0px;">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)">
+                    <div class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">📊 Ringkasan Parameter</div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="card-content" style="margin-top: 12px;">
+                    <div class="stats-grid-5">
+                        <div class="stat-box">
+                            <div class="stat-title">Mean Aktual
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Rata-Rata Aktual (Mean): Nilai rata-rata dari seluruh data
+                                        observasi yang Anda masukkan.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value" id="val-mean">0.00</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-title">Std Deviasi
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Standar Deviasi (Simpangan Baku): Mengukur seberapa menyebar
+                                        data Anda dari nilai rata-ratanya. Semakin kecil nilainya, berarti data semakin
+                                        seragam dan konsisten.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value" id="val-sd">0.00</div>
+                        </div>
+                        <div class="stat-box ucl">
+                            <div class="stat-title" style="color: var(--danger)">Target UCL
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Batas Atas Wajar (UCL): Batas nilai tertinggi yang masih
+                                        dianggap normal. Jika ada hasil produksi di atas batas ini, berarti ada
+                                        masalah/kesalahan pada proses.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value" id="val-ucl" style="color: var(--danger)">-</div>
+                        </div>
+                        <div class="stat-box cl">
+                            <div class="stat-title" style="color: var(--success)">Target CL
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Garis Target/Tengah (CL): Nilai tengah rata-rata atau standar
+                                        ideal yang ingin dicapai dalam kondisi normal.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value" id="val-cl" style="color: var(--success)">-</div>
+                        </div>
+                        <div class="stat-box lcl">
+                            <div class="stat-title" style="color: var(--danger)">Target LCL
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Batas Bawah Wajar (LCL): Batas nilai terendah yang masih
+                                        dianggap normal. Jika ada hasil produksi di bawah batas ini, berarti ada
+                                        masalah/kesalahan pada proses.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value" id="val-lcl" style="color: var(--danger)">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="conclusion-box collapsible-card collapsed" id="conclusionBox" style="margin-top: var(--space-md);">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--glass-border); padding-bottom: 6px; margin-bottom: 8px;">
+                    <div class="conclusion-title" id="conclusionIcon" style="margin-bottom: 0 !important; display: flex; align-items: center; gap: 6px;">💡 Menunggu Data</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Control Chart')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="conclusion-text" id="conclusionText">
+                        Silakan input minimal 2 data observasi untuk melihat analisis kontrol proses (X̄ ± 3σ).
+                    </div>
+                </div>
+            </div>
+
+            <div class="qcc-card collapsible-card collapsed" style="margin-top: var(--space-md); padding: 12px 15px;">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)" style="margin-bottom: 8px;">
+                    <h4 class="panel-title" style="margin-bottom: 0; border: none; padding: 0; font-size: 12.5px; color: var(--primary); font-weight: 700; text-transform: uppercase;">🧮 Rumus Perhitungan</h4>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Control Chart')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="formulaContainer">
+                    <div class="formula-grid">
+                        <div class="formula-box">
+                            <div class="formula-name">Garis Tengah / Center Line (CL)</div>
+                            <div class="math-block">
+                                <span class="formula-term" data-tooltip="CL (Center Line) adalah garis tengah atau nilai rata-rata proses.">CL</span>
+                                &nbsp;=&nbsp;
+                                <span class="formula-term" data-tooltip="X̄ (Mean) adalah nilai rata-rata dari seluruh data yang dikumpulkan.">X̄</span>
+                                &nbsp;=&nbsp;
+                                <div class="math-frac">
+                                    <span class="math-num"><span class="formula-term" data-tooltip="ΣX adalah jumlah total hasil penambahan seluruh nilai data.">ΣX</span></span>
+                                    <span class="math-den"><span class="formula-term" data-tooltip="N adalah jumlah total sampel data yang dimasukkan.">N</span></span>
+                                </div>
+                            </div>
+                            <div class="formula-desc">Garis target/tengah yang mewakili rata-rata keseluruhan proses.</div>
+                        </div>
+
+                        <div class="formula-box">
+                            <div class="formula-name">Standar Deviasi Proses (σ)</div>
+                            <div class="math-block">
+                                <span class="formula-term" data-tooltip="σ (Standar Deviasi) menunjukkan seberapa jauh data menyebar dari rata-ratanya.">σ</span>
+                                &nbsp;=&nbsp;
+                                <span class="math-sqrt-sym">√</span><span class="math-sqrt">
+                                    <div class="math-frac">
+                                        <span class="math-num"><span class="formula-term" data-tooltip="Σ adalah lambang sigma (penjumlahan).">Σ</span>(<span class="formula-term" data-tooltip="X mewakili masing-masing nilai data individu.">X</span> - <span class="formula-term" data-tooltip="X̄ adalah rata-rata data.">X̄</span>)²</span>
+                                        <span class="math-den"><span class="formula-term" data-tooltip="N adalah jumlah total sampel data.">N</span> - 1</span>
+                                    </div>
+                                </span>
+                            </div>
+                            <div class="formula-desc">Mengukur besar keragaman alami (common cause) dari mesin atau proses produksi Anda.</div>
+                        </div>
+
+                        <div class="formula-box">
+                            <div class="formula-name">Batas Kontrol Atas (UCL)</div>
+                            <div class="math-block">
+                                <span class="formula-term" data-tooltip="UCL (Upper Control Limit) adalah batas toleransi kendali atas yang aman. Jika lewat batas ini, proses dianggap tidak normal.">UCL</span>
+                                &nbsp;=&nbsp;
+                                <span class="formula-term" data-tooltip="CL (Center Line) adalah garis tengah atau nilai rata-rata proses.">CL</span>
+                                &nbsp;+&nbsp;
+                                (<span class="formula-term" data-tooltip="3σ (Tiga Sigma) mewakili batas variasi wajar kendali atas.">3 × σ</span>)
+                            </div>
+                            <div class="formula-desc">Batas nilai tertinggi yang wajar secara statistik. Titik di atas batas ini dipicu gangguan luar (special cause).</div>
+                        </div>
+
+                        <div class="formula-box">
+                            <div class="formula-name">Batas Kontrol Bawah (LCL)</div>
+                            <div class="math-block">
+                                <span class="formula-term" data-tooltip="LCL (Lower Control Limit) adalah batas toleransi kendali bawah yang aman. Jika di bawah batas ini, proses dianggap tidak normal.">LCL</span>
+                                &nbsp;=&nbsp;
+                                <span class="formula-term" data-tooltip="CL (Center Line) adalah garis tengah atau nilai rata-rata proses.">CL</span>
+                                &nbsp;-&nbsp;
+                                (<span class="formula-term" data-tooltip="3σ (Tiga Sigma) mewakili batas variasi wajar kendali bawah.">3 × σ</span>)
+                            </div>
+                            <div class="formula-desc">Batas nilai terendah yang wajar secara statistik. Titik di bawah batas ini juga indikasi ketidakstabilan proses.</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 10px; color: var(--text-muted); font-style: italic; margin-top: 8px;">*Catatan: Jika UCL & LCL diisi manual pada panel kiri, batas manual tersebut yang akan memandu grafik.</div>
+
+                    <div style="margin-top: 10px; border-top: 1px dashed var(--glass-border); padding-top: 8px; font-size: 11px; display: flex; flex-wrap: wrap; gap: 8px; color: var(--text);">
+                        <b>Kondisi Proses:</b>
+                        <span class="formula-term" data-tooltip="In-Control berarti seluruh titik data berada di dalam batas wajar kendali UCL & LCL.">In-Control</span> |
+                        <span class="formula-term" data-tooltip="Stable berarti proses berjalan konsisten tanpa ada indikasi anomali/pola sistematis.">Stable</span> |
+                        <span class="formula-term" data-tooltip="Out of Control berarti proses tidak stabil karena keluar dari batas kendali atau polanya tidak acak.">Out of Control</span> |
+                        <span class="formula-term" data-tooltip="Common Cause adalah variasi alami dan wajar yang selalu ada karena faktor getaran halus mesin atau kelembapan udara.">Common Cause</span> |
+                        <span class="formula-term" data-tooltip="Special Cause adalah gangguan tidak wajar akibat faktor luar (seperti pahat longgar atau kesalahan setting mesin).">Special Cause</span>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Mobile -->
+    <nav class="bottom-nav">
+        <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
+        <a href="scatter.html" class="bnav-item" title="Scatter">📈<span>Scatter</span></a>
+        <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
+        <a href="control-chart.html" class="bnav-item active" title="Control">📉<span>Control</span></a>
+        <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+    </nav>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/chart-config.js"></script>
+    <script src="../js/export.js"></script>
+    <script>
+        // --- Init ---
+        startLiveClock('live-time-text');
+
+        const inputContainer = document.getElementById("inputContainer");
+        const maxPoints = 20;
+
+        // Membuat input dinamis
+        for (let i = 1; i <= maxPoints; i++) {
+            let input = document.createElement("input");
+            input.type = "number";
+            input.className = "data-input";
+            input.placeholder = "P-" + i;
+            input.oninput = updateChart;
+            inputContainer.appendChild(input);
+        }
+
+        // --- Fitur Paste Excel ---
+        inputContainer.addEventListener('paste', function (e) {
+            QCC.handleExcelPaste(e, '#inputContainer', updateChart);
+        });
+
+        // --- Chart Setup ---
+        const ctx = document.getElementById("controlChart").getContext("2d");
+
+        let chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: maxPoints }, (_, i) => "T-" + (i + 1)),
+                datasets: [
+                    {
+                        label: 'Nilai Aktual',
+                        data: [],
+                        borderColor: '#257fa8',
+                        backgroundColor: 'rgba(37, 127, 168, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'CL (Center Line)',
+                        data: [],
+                        borderColor: '#2ec4b6',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'UCL (Batas Atas)',
+                        data: [],
+                        borderColor: '#ef233c',
+                        borderDash: [8, 4],
+                        pointRadius: 0,
+                        borderWidth: 1.5
+                    },
+                    {
+                        label: 'LCL (Batas Bawah)',
+                        data: [],
+                        borderColor: '#ef233c',
+                        borderDash: [8, 4],
+                        pointRadius: 0,
+                        borderWidth: 1.5
+                    }
+                ]
+            },
+            options: {
+                ...getDefaultChartOptions(QCC.isMobile),
+                animation: false,
+                animations: false,
+                transitions: {
+                    active: { animation: { duration: 0 } },
+                    resize: { animation: { duration: 0 } }
+                }
+            }
+        });
+
+        // --- Update Chart ---
+        function updateChart() {
+            let inputs = document.querySelectorAll("#inputContainer input");
+            let values = [];
+
+            inputs.forEach(input => {
+                if (input.value !== "") {
+                    let v = safeParseNumber(input.value);
+                    if (v !== null) values.push(v);
+                }
+            });
+
+            let rawUCL = document.getElementById("inputUCL").value;
+            let rawCL = document.getElementById("inputCL").value;
+            let rawLCL = document.getElementById("inputLCL").value;
+
+            let manualUCL = rawUCL !== "" ? safeParseNumber(rawUCL) : null;
+            let manualCL = rawCL !== "" ? safeParseNumber(rawCL) : null;
+            let manualLCL = rawLCL !== "" ? safeParseNumber(rawLCL) : null;
+
+            // Simpan ke localStorage
+            saveToStorage('controlchart', {
+                values: Array.from(inputs).map(i => i.value),
+                manualLimits: { ucl: rawUCL, cl: rawCL, lcl: rawLCL }
+            });
+
+            // 1. Validasi Batas Manual UCL & LCL
+            if (manualLCL !== null && manualUCL !== null && manualLCL > manualUCL) {
+                resetStats();
+                chart.data.datasets.forEach(ds => ds.data = []);
+                chart.update('none');
+                const box = document.getElementById("conclusionBox");
+                box.className = "conclusion-box danger";
+                document.getElementById("conclusionIcon").innerHTML = "❌ Kesalahan Parameter";
+                document.getElementById("conclusionText").innerHTML = "Nilai batas LCL tidak boleh lebih besar dari UCL.";
+                return;
+            }
+
+            // 2. Validasi Batas Manual CL
+            if (manualCL !== null) {
+                if (manualLCL !== null && manualCL < manualLCL) {
+                    resetStats();
+                    chart.data.datasets.forEach(ds => ds.data = []);
+                    chart.update('none');
+                    const box = document.getElementById("conclusionBox");
+                    box.className = "conclusion-box danger";
+                    document.getElementById("conclusionIcon").innerHTML = "❌ Kesalahan Parameter";
+                    document.getElementById("conclusionText").innerHTML = "Garis CL harus berada di antara batas LCL dan UCL.";
+                    return;
+                }
+                if (manualUCL !== null && manualCL > manualUCL) {
+                    resetStats();
+                    chart.data.datasets.forEach(ds => ds.data = []);
+                    chart.update('none');
+                    const box = document.getElementById("conclusionBox");
+                    box.className = "conclusion-box danger";
+                    document.getElementById("conclusionIcon").innerHTML = "❌ Kesalahan Parameter";
+                    document.getElementById("conclusionText").innerHTML = "Garis CL harus berada di antara batas LCL dan UCL.";
+                    return;
+                }
+            }
+
+            if (values.length < 2) {
+                resetStats();
+                chart.data.datasets.forEach(ds => ds.data = []);
+                if (values.length === 1) {
+                    chart.data.datasets[0].data = [values[0]];
+                }
+                if (manualCL !== null) chart.data.datasets[1].data = Array(maxPoints).fill(manualCL);
+                if (manualUCL !== null) chart.data.datasets[2].data = Array(maxPoints).fill(manualUCL);
+                if (manualLCL !== null) chart.data.datasets[3].data = Array(maxPoints).fill(manualLCL);
+
+                delete chart.options.scales.y.min;
+                delete chart.options.scales.y.max;
+                chart.update('none');
+                updateConclusion(values, manualUCL, manualCL, manualLCL, []);
+                return;
+            }
+
+            let mean = values.reduce((a, b) => a + b, 0) / values.length;
+            let variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (values.length - 1);
+            let sd = Math.sqrt(variance);
+
+            let UCL = manualUCL !== null ? manualUCL : mean + (3 * sd);
+            let CL = manualCL !== null ? manualCL : mean;
+            let LCL = manualLCL !== null ? manualLCL : mean - (3 * sd);
+
+            document.getElementById("val-mean").innerText = mean.toFixed(2);
+            document.getElementById("val-sd").innerText = sd.toFixed(2);
+            document.getElementById("val-ucl").innerText = UCL.toFixed(2);
+            document.getElementById("val-cl").innerText = CL.toFixed(2);
+            document.getElementById("val-lcl").innerText = LCL.toFixed(2);
+
+            let fullData = Array(maxPoints).fill(null);
+            let pointColors = [];
+            let pointRadii = [];
+            let outOfControl = [];
+
+            for (let i = 0; i < inputs.length; i++) {
+                let val = inputs[i].value !== "" ? parseFloat(inputs[i].value) : null;
+                fullData[i] = val;
+
+                if (val !== null) {
+                    if (val > UCL || val < LCL) {
+                        pointColors.push('#ef233c');
+                        pointRadii.push(6);
+                        outOfControl.push({ index: i + 1, value: val, type: val > UCL ? 'UCL' : 'LCL' });
+                    } else {
+                        pointColors.push('#257fa8');
+                        pointRadii.push(4);
+                    }
+                } else {
+                    pointColors.push('transparent');
+                    pointRadii.push(0);
+                }
+            }
+
+            // Kunci sumbu Y agar chart stabil
+            let allValidData = fullData.filter(v => v !== null);
+            allValidData.push(UCL, LCL, CL);
+            let maxVal = Math.max(...allValidData);
+            let minVal = Math.min(...allValidData);
+            let diff = maxVal - minVal;
+            let pad = diff === 0 ? 10 : diff * 0.15;
+            chart.options.scales.y.min = minVal - pad;
+            chart.options.scales.y.max = maxVal + pad;
+
+            chart.data.datasets[0].data = fullData;
+            chart.data.datasets[0].pointBackgroundColor = pointColors;
+            chart.data.datasets[0].pointBorderColor = pointColors;
+            chart.data.datasets[0].pointRadius = pointRadii;
+
+            chart.data.datasets[1].data = Array(maxPoints).fill(CL);
+            chart.data.datasets[2].data = Array(maxPoints).fill(UCL);
+            chart.data.datasets[3].data = Array(maxPoints).fill(LCL);
+
+            chart.options.plugins.qccDataLabels.enabled = document.getElementById("showLabelsToggle").checked;
+            chart.update('none');
+
+            updateConclusion(values, UCL, CL, LCL, outOfControl);
+        }
+
+        // --- Diagnostic Analysis (Bahasa Membumi & Detail) ---
+        function analyzeSpecialCauses(data, UCL, CL, LCL) {
+            let issues = [];
+            let n = data.length;
+
+            // 1. OUTLIER (Loncatan Liar)
+            let outliers = [];
+            for (let i = 0; i < n; i++) {
+                if (data[i] > UCL || data[i] < LCL) outliers.push(i + 1);
+            }
+            if (outliers.length > 0) {
+                issues.push(`
+                <span class="issue-title">🚨 Loncatan Liar di Luar Batas (Outlier)</span>
+                Terdapat <b>${outliers.length} data</b> yang meloncat liar menembus batas kendali aman UCL/LCL (yaitu pada Poin <b>T-${outliers.join(', T-')}</b>). Ini menandakan adanya gangguan sporadis mendadak di lapangan.
+                <div class="investigation-box">
+                    <span class="investigation-icon">🔍</span>
+                    <div><strong>Langkah Investigasi Genba:</strong> Cek apakah ada salah tulis desimal (human error saat catat), sensor alat ukur kemasukan debu tebal sesaat, kelistrikan berkedip, atau ada satu buah material cacat bawaan supplier yang terselip masuk jalur.</div>
+                </div>
+            `);
+            }
+
+            // 2. SHIFT (Pergeseran Garis Nasib Proses)
+            let consAbove = 0, consBelow = 0;
+            for (let i = 0; i < n; i++) {
+                if (data[i] > CL) { consAbove++; consBelow = 0; }
+                else if (data[i] < CL) { consBelow++; consAbove = 0; }
+                else { consAbove = 0; consBelow = 0; }
+
+                if (consAbove === 7) {
+                    issues.push(`
+                    <span class="issue-title">📈 Pergeseran Rata-rata ke Atas (Shift Naik)</span>
+                    Terdeteksi <b>7 titik data berurutan</b> menumpuk terus-menerus di atas garis tengah CL. Ini tanda proses kita sudah bergeser permanen dari seting awal!
+                    <div class="investigation-box">
+                        <span class="investigation-icon">🔍</span>
+                        <div><strong>Cek Henkaten (Perubahan 4M):</strong> Evaluasi apa yang baru saja diganti? Apakah ada operator baru pengganti shift, ada perubahan setingan suhu mesin baru, atau material batch baru dari supplier yang sifat fisiknya berbeda?</div>
+                    </div>
+                `);
+                    consAbove = 0;
+                }
+                if (consBelow === 7) {
+                    issues.push(`
+                    <span class="issue-title">📉 Pergeseran Rata-rata ke Bawah (Shift Turun)</span>
+                    Terdeteksi <b>7 titik data berurutan</b> menumpuk terus-menerus di bawah garis tengah CL. Ini tanda proses kita merosot permanen di bawah standar target.
+                    <div class="investigation-box">
+                        <span class="investigation-icon">🔍</span>
+                        <div><strong>Cek Henkaten (Perubahan 4M):</strong> Evaluasi adanya ausnya sparepart pendukung, penggantian merk pelumas, operator kurang fit/lelah sehingga merubah kebiasaan kerja, atau penurunan suplai tekanan gas/angin utama.</div>
+                    </div>
+                `);
+                    consBelow = 0;
+                }
+            }
+
+            // 3. TREND (Tangga Merayap)
+            let consUp = 0, consDown = 0;
+            for (let i = 1; i < n; i++) {
+                if (data[i] > data[i - 1]) { consUp++; consDown = 0; }
+                else if (data[i] < data[i - 1]) { consDown++; consUp = 0; }
+                else { consUp = 0; consDown = 0; }
+
+                if (consUp >= 6) {
+                    issues.push(`
+                    <span class="issue-title">🔺 Tren Merayap Naik (Gradual Trend Upwards)</span>
+                    Data perlahan merayap naik seperti tangga selama <b>6 periode berturut-turut</b>. Menandakan adanya akumulasi degradasi secara bertahap.
+                    <div class="investigation-box">
+                        <span class="investigation-icon">🔍</span>
+                        <div><strong>Langkah Investigasi Genba:</strong> Periksa apakah mesin perlahan merambat panas (overheat), terjadi penumpukan kerak/residu cetakan yang makin tebal, atau adanya penyumbatan filter oli yang terjadi pelan-pelan.</div>
+                    </div>
+                `);
+                    consUp = 0;
+                }
+                if (consDown >= 6) {
+                    issues.push(`
+                    <span class="issue-title">🔻 Tren Merayap Turun (Gradual Trend Downwards)</span>
+                    Data perlahan merayap turun secara berurutan selama <b>6 periode berturut-turut</b>.
+                    <div class="investigation-box">
+                        <span class="investigation-icon">🔍</span>
+                        <div><strong>Langkah Investigasi Genba:</strong> Cek keausan pisau potong (tool wear) yang perlahan memendekkan ukuran produk, kebocoran pelumas halus, atau melemahnya tekanan hidrolik/tegangan listrik pabrik secara gradual.</div>
+                    </div>
+                `);
+                    consDown = 0;
+                }
+            }
+
+            // 4. CYCLE (Ayunan Siklis Bergantian)
+            let altCount = 0;
+            for (let i = 2; i < n; i++) {
+                let diff1 = data[i - 1] - data[i - 2];
+                let diff2 = data[i] - data[i - 1];
+                if ((diff1 > 0 && diff2 < 0) || (diff1 < 0 && diff2 > 0)) { altCount++; } else { altCount = 0; }
+
+                if (altCount >= 14) {
+                    issues.push(`
+                    <span class="issue-title">🔄 Ayunan Siklus Berulang (Zig-zag Sistematis)</span>
+                    Data melompat naik-turun secara konstan sebanyak <b>14 kali berturut-turut</b> seperti pola gergaji. Ini bukan variasi acak alamiah, tapi ada 'siklus' tersembunyi yang menyetir proses!
+                    <div class="investigation-box">
+                        <span class="investigation-icon">🔍</span>
+                        <div><strong>Langkah Investigasi Genba:</strong> Evaluasi apakah ada 2 operator berbeda (dengan kebiasaan kerja/alat ukur berbeda) yang bergantian mengukur produk secara bergantian, atau cek siklus otomatis nyala-mati berkala dari kompresor pendingin / pemanas oven.</div>
+                    </div>
+                `);
+                    altCount = 0;
+                }
+            }
+
+            return issues;
+        }
+
+        // --- Conclusion / Analysis ---
+        function updateConclusion(values, UCL, CL, LCL, outOfControl) {
+            const box = document.getElementById("conclusionBox");
+            if (!box) return;
+
+            const isCollapsed = box.classList.contains("collapsed");
+            let pattern = '';
+            let title = '';
+            let html = '';
+
+            if (values.length < 2) {
+                pattern = 'info';
+                title = "💡 Menunggu Data";
+                html = "Silakan masukkan minimal 2 data observasi untuk melihat analisis statistik kontrol proses (X̄ ± 3σ) dan deteksi dini anomali kerja.";
+            } else if (UCL === LCL) {
+                pattern = 'warning';
+                title = "⚠️ Data Konstan (Variasi Nol)";
+                html = `
+                <div style="line-height:1.6; font-size: 13px;">
+                    📌 <b>Status Proses:</b> Seluruh data observasi bernilai sama persis kembar! Batas UCL, CL, dan LCL bernilai sama di angka <b>${CL.toFixed(2)}</b>.
+                    <br><br>
+                    🔍 <b>Analisis Praktis:</b> Kejadian tanpa variasi sama sekali sangat tidak wajar di dunia manufaktur nyata.
+                    <br><br>
+                    🎯 <b>Saran Tindakan:</b> Periksa apakah alat ukur macet (jarum terkunci), resolusi alat ukur terlalu kasar untuk menangkap koma, atau operator hanya menduga data (tembak angka) di lembar check sheet tanpa benar-benar melakukan pengukuran fisik.
+                </div>
+                `;
+            } else {
+                let issues = analyzeSpecialCauses(values, UCL, CL, LCL);
+                if (issues.length > 0) {
+                    pattern = 'danger';
+                    title = "❌ ADA ABNORMALITAS!";
+                    let issuesHTML = `<ul class="issues-list" style="display:flex; flex-direction:column; gap: var(--space-md); padding-left: 0; list-style:none;">`;
+                    issues.forEach(issue => { issuesHTML += `<li style="background: rgba(239,35,60,0.03); border: 1px solid var(--glass-border); padding: var(--space-md); border-radius: 8px;">${issue}</li>`; });
+                    issuesHTML += `</ul>`;
+                    html = `
+                    <div style="font-size: 13px; line-height: 1.6; margin-bottom: var(--space-md);">
+                        ⚠️ <b>Grafik loncat keluar batas aman!</b> Segera <b>STOP MESIN</b> dan cek <i>Henkaten</i> (4M): Apakah ada material <i>batch</i> baru masuk? Apakah ini operator baru/ganti shift? Tarik Andon dan lapor ke TL sekarang!
+                    </div>
+                    ${issuesHTML}
+                    `;
+                } else {
+                    pattern = 'success';
+                    title = "✅ Mesin Stabil!";
+                    html = `
+                    <div style="line-height:1.6; font-size: 13px;">
+                        📌 <b>Status:</b> Variasi ukuran masih wajar dan aman di dalam toleransi (UCL = <b>${UCL.toFixed(2)}</b>, LCL = <b>${LCL.toFixed(2)}</b>).
+                        <br><br>
+                        🎯 <b>Instruksi:</b> <b>JANGAN iseng putar/ubah settingan offset mesin!</b> Biarkan saja beroperasi sesuai standar. Jangan lakukan <i>over-adjustment</i> (ngutak-ngatik mesin yang udah bener) karena itu malah bikin dimensi part jadi kacau.
+                    </div>
+                    `;
+                }
+            }
+
+            box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} ${pattern}`;
+            box.innerHTML = `
+                <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                    <span id="conclusionIcon" class="conclusion-icon">${title}</span>
+                    <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                </div>
+                <div class="conclusion-content collapsible-content">
+                    <div id="conclusionText" class="conclusion-text">${html}</div>
+                    <button class="qcc-btn btn-focus-trigger" onclick="QCC.openFocusModal()" style="margin-top: var(--space-md); width: 100%;"><i class="fas fa-expand-arrows-alt"></i> Buka Layar Penuh</button>
+                </div>
+            `;
+        }
+
+        // --- Random Data ---
+        function randomizeData() {
+            let newCL = Math.floor(Math.random() * 21) + 40;
+            let span = Math.floor(Math.random() * 11) + 15;
+
+            let newUCL = newCL + span;
+            let newLCL = newCL - span;
+
+            document.getElementById("inputUCL").value = newUCL;
+            document.getElementById("inputCL").value = newCL;
+            document.getElementById("inputLCL").value = newLCL;
+
+            let inputs = document.querySelectorAll("#inputContainer input");
+            let randomCase = Math.random();
+            let arr = [];
+
+            if (randomCase > 0.50) {
+                // PROSES STABIL
+                let consecutiveAbove = 0;
+                let consecutiveBelow = 0;
+                let consecutiveUp = 0;
+                let consecutiveDown = 0;
+                let consecutiveAlts = 0;
+
+                for (let i = 0; i < maxPoints; i++) {
+                    let val;
+                    let attempts = 0;
+                    do {
+                        attempts++;
+                        let variation = (Math.random() * 2 - 1) * (span * 0.6);
+                        val = Math.round(newCL + variation);
+
+                        let isOk = true;
+                        if (i > 0) {
+                            let side = val > newCL ? 1 : (val < newCL ? -1 : 0);
+                            let nextConsecutiveAbove = (side === 1) ? consecutiveAbove + 1 : 0;
+                            let nextConsecutiveBelow = (side === -1) ? consecutiveBelow + 1 : 0;
+                            if (nextConsecutiveAbove >= 6 || nextConsecutiveBelow >= 6) isOk = false;
+
+                            let trendDir = val > arr[i - 1] ? 1 : (val < arr[i - 1] ? -1 : 0);
+                            let nextConsecutiveUp = (trendDir === 1) ? consecutiveUp + 1 : 0;
+                            let nextConsecutiveDown = (trendDir === -1) ? consecutiveDown + 1 : 0;
+                            if (nextConsecutiveUp >= 5 || nextConsecutiveDown >= 5) isOk = false;
+
+                            let nextConsecutiveAlts = 0;
+                            if (i >= 2) {
+                                let diffPrev = arr[i - 1] - arr[i - 2];
+                                let diffCurr = val - arr[i - 1];
+                                let isAlt = (diffPrev > 0 && diffCurr < 0) || (diffPrev < 0 && diffCurr > 0);
+                                nextConsecutiveAlts = isAlt ? consecutiveAlts + 1 : 0;
+                            }
+                            if (nextConsecutiveAlts >= 12) isOk = false;
+                        }
+
+                        if (isOk) {
+                            if (val > newCL) {
+                                consecutiveAbove++; consecutiveBelow = 0;
+                            } else if (val < newCL) {
+                                consecutiveBelow++; consecutiveAbove = 0;
+                            } else {
+                                consecutiveAbove = 0; consecutiveBelow = 0;
+                            }
+
+                            if (i > 0) {
+                                if (val > arr[i - 1]) {
+                                    consecutiveUp++; consecutiveDown = 0;
+                                } else if (val < arr[i - 1]) {
+                                    consecutiveDown++; consecutiveUp = 0;
+                                } else {
+                                    consecutiveUp = 0; consecutiveDown = 0;
+                                }
+                            }
+
+                            if (i >= 2) {
+                                let diffPrev = arr[i - 1] - arr[i - 2];
+                                let diffCurr = val - arr[i - 1];
+                                let isAlt = (diffPrev > 0 && diffCurr < 0) || (diffPrev < 0 && diffCurr > 0);
+                                consecutiveAlts = isAlt ? consecutiveAlts + 1 : 0;
+                            }
+                            arr.push(val);
+                            break;
+                        }
+
+                        if (attempts > 100) {
+                            val = newCL;
+                            consecutiveAbove = 0; consecutiveBelow = 0;
+                            consecutiveUp = 0; consecutiveDown = 0;
+                            consecutiveAlts = 0;
+                            arr.push(val);
+                            break;
+                        }
+                    } while (true);
+                }
+            } else {
+                // PROSES TIDAK STABIL
+                for (let i = 0; i < maxPoints; i++) {
+                    let variation = (Math.random() * 2 - 1) * (span * 0.7);
+                    arr.push(Math.round(newCL + variation));
+                }
+
+                let anomalyType = Math.floor(Math.random() * 4);
+                if (anomalyType === 0) {
+                    // Outlier
+                    arr[7] = newUCL + Math.floor(Math.random() * 6) + 2;
+                    arr[15] = newLCL - Math.floor(Math.random() * 6) - 2;
+                } else if (anomalyType === 1) {
+                    // Shift
+                    for (let i = 4; i < 12; i++) {
+                        arr[i] = Math.round(newCL + (Math.random() * (span * 0.75) + (span * 0.1)));
+                    }
+                } else if (anomalyType === 2) {
+                    // Trend
+                    let start = newUCL - 2;
+                    let step = (span * 1.5) / 8;
+                    for (let i = 6; i < 14; i++) {
+                        arr[i] = Math.round(start);
+                        start -= step;
+                    }
+                } else {
+                    // Cycle
+                    let high = Math.round(newCL + span * 0.7);
+                    let low = Math.round(newCL - span * 0.7);
+                    for (let i = 2; i < 16; i++) {
+                        arr[i] = (i % 2 === 0) ? high : low;
+                    }
+                }
+            }
+
+            inputs.forEach((input, idx) => {
+                input.value = arr[idx];
+            });
+            updateChart();
+        }
+
+        // --- Reset ---
+        function resetStats() {
+            document.getElementById("val-mean").innerText = "0.00";
+            document.getElementById("val-sd").innerText = "0.00";
+            document.getElementById("val-ucl").innerText = "-";
+            document.getElementById("val-cl").innerText = "-";
+            document.getElementById("val-lcl").innerText = "-";
+        }
+
+        function resetData() {
+            if (!confirm("Yakin ingin reset semua data dan parameter?")) return;
+            document.querySelectorAll("#inputContainer input").forEach(input => input.value = "");
+            document.getElementById("inputUCL").value = "";
+            document.getElementById("inputCL").value = "";
+            document.getElementById("inputLCL").value = "";
+            resetStats();
+            chart.data.datasets.forEach(ds => ds.data = []);
+            delete chart.options.scales.y.min;
+            delete chart.options.scales.y.max;
+            chart.update('none');
+            clearStorage('controlchart');
+            updateConclusion([], null, null, null, []);
+        }
+
+        // --- Export ---
+        async function exportFullPage() {
+            await exportPageAsPNG({
+                exportBtnId: 'exportBtn',
+                fileName: 'Laporan-Control-Chart.png',
+                chartInstance: chart
+            });
+        }
+
+        function changeBgColor(colorHex) {
+            QCC.changeBgColor(colorHex, chart, 'controlchart_bg');
+        }
+
+        function toggleTheme() {
+            QCC.toggleTheme(chart, 'controlchart_bg');
+        }
+
+        function toggleDataLabels() {
+            const show = document.getElementById("showLabelsToggle").checked;
+            saveToStorage('controlchart_showLabels', show);
+            updateChart();
+        }
+
+        // --- Load saved theme & data ---
+        (function initThemeAndData() {
+            const savedTheme = localStorage.getItem('theme');
+            const savedBg = localStorage.getItem('controlchart_bg') || (savedTheme === 'dark' ? '#2b2d42' : '#f8f9fa');
+            changeBgColor(savedBg);
+
+            // Wait for chart creation to apply dark mode style
+            setTimeout(() => {
+                const isDark = document.body.classList.contains('dark-mode');
+                applyDarkModeToChart(chart, isDark);
+            }, 100);
+
+            const savedShowLabels = loadFromStorage('controlchart_showLabels') === true;
+            document.getElementById("showLabelsToggle").checked = savedShowLabels;
+
+            const saved = loadFromStorage('controlchart');
+            if (saved && saved.values) {
+                const inputs = document.querySelectorAll("#inputContainer input");
+                saved.values.forEach((v, i) => {
+                    if (i < inputs.length && v !== "") inputs[i].value = v;
+                });
+                if (saved.manualLimits) {
+                    document.getElementById("inputUCL").value = saved.manualLimits.ucl || "";
+                    document.getElementById("inputCL").value = saved.manualLimits.cl || "";
+                    document.getElementById("inputLCL").value = saved.manualLimits.lcl || "";
+                }
+                updateChart();
+            }
+        })();
+
+        // --- Visibility API ---
+        onVisibilityChange(
+            () => { /* pause */ },
+            () => { /* resume */ }
+        );
+    </script>
+    <script src="/js/chatbot.js" defer></script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=index.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mengalihkan ke QCC Dashboard...</title>
+  <style>
+    body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border-left-color: #3b82f6;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    window.location.replace("index.html");
+  </script>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h2>Mengalihkan Anda ke Dashboard Utama...</h2>
+  <p>Jika halaman tidak berpindah secara otomatis, silakan klik <a href="index.html">tautan ini</a>.</p>
+</body>
+</html>

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quality Control Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link rel="stylesheet" href="css/components.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+  <style>
+    html, body {
+      width: 100% !important;
+      max-width: 100vw !important;
+      box-sizing: border-box !important;
+    }
+    body {
+      font-family: var(--font-family);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: var(--text);
+      transition: background var(--transition-base), color var(--transition-base);
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ===== LIQUID BACKGROUND BLobs ===== */
+    .bg-shape {
+      position: fixed;
+      filter: blur(100px);
+      z-index: -1;
+      border-radius: 50%;
+      animation: float 20s infinite ease-in-out alternate;
+      transition: background 0.5s;
+      will-change: transform, filter;
+    }
+    .shape-1 {
+      width: 40vw; height: 40vw;
+      background: var(--liquid-blob-1);
+      transform: translate3d(-10%, -10%, 0);
+    }
+    .shape-2 {
+      width: 50vw; height: 50vw;
+      background: var(--liquid-blob-2);
+      transform: translate3d(50vw, 50vh, 0); /* Approximated initial position */
+      right: -10%; bottom: -15%; /* Keep these for base positioning relative to fixed container before transform */
+      animation-delay: -5s;
+    }
+    @keyframes float {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      100% { transform: translate3d(50px, 80px, 0) scale(1.1); }
+    }
+
+    /* ===== GLASSMORPHISM UTILITY ===== */
+    .glass {
+      background: var(--card-bg-glass);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid var(--card-border-glass);
+      box-shadow: var(--glass-shadow);
+    }
+
+    /* ===== MODIFIKASI HEADER ===== */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 10px 30px; 
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+      flex-shrink: 0; 
+      z-index: 10;
+      position: relative; 
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 100px; 
+      border-radius: 15px; 
+      margin-bottom: 25px; 
+    }
+
+    .logo {
+      height: 90px; 
+      width: auto;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px; 
+    }
+
+    /* ===== JAM & DATE ===== */
+    .datetime {
+      font-size: 14px; 
+      font-weight: 500;
+      color: #ffffff; 
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 20px; 
+      border-radius: 25px; 
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* ===== ICON BUTTONS ===== */
+    .btn-header {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      width: 45px; 
+      height: 45px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px; 
+      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-header:hover { 
+        background: rgba(255, 255, 255, 0.4); 
+        transform: translateY(-2px);
+    }
+
+    .theme-toggle { font-size: 18px; }
+
+    /* ===== DROPDOWN PANDUAN ===== */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content {
+      display: none; position: absolute; right: 0; top: 110%;
+      background-color: var(--card-bg); color: var(--text-main);
+      min-width: 280px; box-shadow: 0px 10px 25px rgba(0,0,0,0.2);
+      border-radius: 12px; padding: 18px; z-index: 100;
+      border: 1px solid var(--card-border); text-align: left;
+    }
+    .dropdown-content.show { display: block; animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .dropdown-content h4 { margin-bottom: 12px; color: var(--primary); font-size: 14px; border-bottom: 1px dashed var(--card-border); padding-bottom: 6px; }
+    .dropdown-content p { font-size: 12px; margin-bottom: 8px; line-height: 1.5; color: var(--text-muted); }
+    .dropdown-content p strong { color: var(--text-main); }
+
+    /* ===== GLOSARIUM MODAL ===== */
+    .modal-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;
+      backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    
+    .modal-content {
+      background: var(--card-bg); width: 95%; max-width: 750px; border-radius: 20px;
+      border: 1px solid var(--card-border); box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+      transform: translateY(-30px); transition: transform 0.3s ease; display: flex; flex-direction: column;
+      max-height: 85vh; overflow: hidden;
+    }
+    .modal-overlay.show .modal-content { transform: translateY(0); }
+    
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center; padding: 20px 25px;
+      background: var(--primary); color: white;
+    }
+    .modal-header h3 { font-size: 20px; margin: 0; display: flex; align-items: center; gap: 10px; color: white;}
+    .modal-close {
+      background: rgba(255,255,255,0.2); border: none; font-size: 18px; color: white;
+      cursor: pointer; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+    
+    .glossary-tabs { display: flex; background: var(--bg-color); padding: 5px; gap: 5px; border-bottom: 1px solid var(--card-border); }
+    .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); border-radius: 8px; transition: 0.3s; }
+    .tab-btn.active { background: var(--card-bg); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+    .modal-body { padding: 0; overflow-y: auto; }
+    .modal-body::-webkit-scrollbar { width: 6px; }
+    .modal-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    
+    .tab-content { display: none; padding: 20px 25px; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+    .term-card {
+        margin-bottom: 15px; padding: 15px; border-radius: 12px; 
+        background: var(--bg-color); border: 1px solid var(--card-border);
+        transition: 0.3s;
+    }
+    .term-card:hover { border-color: var(--primary); transform: translateX(5px); }
+    .term-title { font-weight: 700; color: var(--primary); font-size: 15px; display: block; margin-bottom: 5px; }
+    .term-desc { font-size: 13px; color: var(--text-main); line-height: 1.6; }
+    .term-tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--primary); color: white; margin-bottom: 8px; text-transform: uppercase; font-weight: 600;}
+
+    /* ===== INTRO & PRETEST BUTTON ===== */
+    .intro { text-align: center; padding: 40px 20px 10px; max-width: 800px; margin: 0 auto; position: relative; z-index: 1;}
+    .intro h2 { font-size: 26px; color: var(--primary); margin-bottom: 12px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .intro p { font-size: 15px; color: var(--text-muted); line-height: 1.6; font-weight: 500; margin-bottom: 20px;}
+    
+    .btn-pretest {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: 700;
+        border-radius: 30px; cursor: pointer; box-shadow: 0 6px 15px rgba(37, 127, 168, 0.3);
+        transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-pretest:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 20px rgba(37, 127, 168, 0.4); }
+    .btn-pretest:active { transform: scale(0.95); }
+ 
+    .btn-pretest-fixed {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white; border: none; padding: 10px 18px; font-size: 13px; font-weight: 600;
+        border-radius: 30px; cursor: pointer; box-shadow: 0 4px 15px rgba(37, 127, 168, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-pretest-fixed:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 20px rgba(37, 127, 168, 0.45); }
+    .btn-pretest-fixed:active { transform: scale(0.95); }
+
+    /* ===== PRETEST MODAL OVERLAY & CARD ===== */
+    .pretest-dropdown-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    .pretest-modal-card {
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 30px;
+        position: relative;
+        text-align: left;
+        border-radius: 20px;
+        animation: modalScaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalScaleUp {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .modal-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: transparent;
+        border: none;
+        font-size: 28px;
+        font-weight: 400;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.2s;
+        line-height: 1;
+    }
+    .modal-close-btn:hover {
+        color: var(--danger);
+    }
+
+    .quiz-countdown { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 0; }
+    .countdown-number { font-size: 80px; font-weight: 800; color: var(--primary); text-shadow: 0 4px 10px rgba(0,0,0,0.1); animation: pulseCount 1s infinite; }
+    @keyframes pulseCount { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    .quiz-question { margin-bottom: 20px; padding-bottom: 15px; }
+    .quiz-q-title { font-weight: 700; font-size: 15px; margin-bottom: 15px; color: var(--text-main); line-height: 1.5; }
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+    
+    .quiz-opt-btn { 
+        display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-main); 
+        cursor: pointer; padding: 12px 15px; border-radius: 8px; background: rgba(0,0,0,0.03); 
+        border: 1px solid var(--card-border-glass); transition: 0.2s; font-weight: 500;
+    }
+    .quiz-opt-btn:hover { background: rgba(0,0,0,0.06); }
+    body.dark-mode .quiz-opt-btn { background: rgba(255,255,255,0.05); }
+    body.dark-mode .quiz-opt-btn:hover { background: rgba(255,255,255,0.1); }
+    
+    .quiz-opt-btn.correct { background: rgba(46, 196, 182, 0.15) !important; border-color: var(--success) !important; color: var(--success) !important; font-weight: 700;}
+    .quiz-opt-btn.wrong { background: rgba(239, 35, 60, 0.15) !important; border-color: var(--danger) !important; color: var(--danger) !important; }
+
+    .quiz-result { text-align: center; padding: 30px; display: none; }
+    .quiz-result h3 { font-size: 26px; color: var(--primary); margin-bottom: 10px; }
+    .quiz-result p { font-size: 15px; color: var(--text-main); font-weight: 500;}
+
+    /* ===== MAIN CONTAINER & GRID ===== */
+    .container { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 20px 5% 50px; position: relative; z-index: 1;}
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 800px; }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--card-bg); border-radius: 16px; padding: 25px 20px; text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.04); cursor: pointer; position: relative; overflow: hidden;
+      border: 1px solid var(--card-border); transition: all 0.4s ease; display: flex; flex-direction: column; align-items: center;
+    }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: 0.3s; }
+    .card:hover { transform: translateY(-6px); box-shadow: 0 15px 30px rgba(0,0,0,0.12); border-color: var(--primary); }
+    .card:hover::before { height: 5px; }
+
+    .live-icon-container { width: 90px; height: 90px; margin-bottom: 15px; position: relative; display: flex; justify-content: center; align-items: center; }
+    .static-icon { width: 70px; height: 70px; transition: 0.3s ease; filter: drop-shadow(0 3px 5px rgba(0,0,0,0.08)); position: absolute; }
+    .live-canvas { width: 90px !important; height: 90px !important; position: absolute; opacity: 0; transition: opacity 0.3s ease; pointer-events: none; }
+    .card:hover .static-icon { opacity: 0; transform: scale(0.8); }
+    .card:hover .live-canvas { opacity: 1; }
+
+    .card h3 { font-size: 17px; margin-bottom: 8px; color: var(--text-main); font-weight: 700; }
+    .card-text-area { position: relative; width: 100%; height: 75px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+    .card-text-area p { position: absolute; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; transition: all 0.3s ease; width: 100%; opacity: 1; transform: translateY(0); }
+    .learning-objective { position: absolute; width: 100%; font-size: 11.5px; color: var(--primary); background: rgba(37, 127, 168, 0.08); padding: 8px 10px; border-radius: 8px; opacity: 0; transform: translateY(12px); transition: all 0.3s ease; pointer-events: none; }
+    body.dark-mode .learning-objective { color: #fca5a5; background: rgba(37, 127, 168, 0.15); }
+    
+    .card:hover .card-text-area p { opacity: 0; transform: translateY(-12px); }
+    .card:hover .learning-objective { opacity: 1; transform: translateY(0); }
+
+    .badge { display: inline-block; background: var(--theme-tint); color: var(--primary); font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 15px; margin-top: auto; }
+    body.dark-mode .badge { background: #5c111c; color: #fca5a5; }
+
+    /* ===== TOUR STYLES ===== */
+    .tour-highlight { position: fixed; z-index: 9998; border-radius: 12px; background: transparent; box-shadow: 0 0 0 9999px rgba(0,0,0,0.65); pointer-events: none; transition: all 0.4s ease; display: none; }
+    .tour-tooltip { position: fixed; z-index: 9999; background: var(--card-bg); color: var(--text-main); padding: 20px; border-radius: 12px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--card-border); transition: all 0.4s ease; display: none; opacity: 0; transform: translateY(10px); }
+    .tour-tooltip.show { opacity: 1; transform: translateY(0); }
+    .tour-tooltip h4 { color: var(--primary); margin-bottom: 10px; font-size: 16px; display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed var(--card-border); padding-bottom: 8px;}
+    .tour-tooltip p { font-size: 13px; line-height: 1.6; color: var(--text-muted); margin-bottom: 18px;}
+    .tour-buttons { display: flex; justify-content: space-between; align-items: center; }
+    .tour-buttons button { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-family: var(--font-family); font-weight: 600; font-size: 12px; transition: 0.2s;}
+    
+    .tour-btn-close { background: transparent; color: var(--text-muted); }
+    .tour-btn-close:hover { color: #ef4444; }
+    .tour-btn-prev { background: var(--card-border); color: var(--text-main); }
+    .tour-btn-next { background: var(--primary); color: white; }
+    .tour-btn-next:hover { background: var(--primary-hover); }
+
+    /* ===== FOOTER ===== */
+    footer { 
+      background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+      color: white; 
+      text-align: center; 
+      padding: 15px; 
+      font-size: 14px; 
+      transition: background 0.3s;
+      border-radius: 12px;
+      margin-top: auto; 
+      position: relative; z-index: 1;
+    }
+    footer span { color: #f8fafc; font-weight: 600; }
+
+
+    /* ===== RESPONSIVE ===== */
+    @media (min-width: 993px) {
+      html {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+      body {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        padding: 15px 30px;
+      }
+      header {
+        height: 70px;
+        margin-bottom: 12px;
+        flex-shrink: 0;
+      }
+      .logo {
+        height: 55px;
+      }
+      .btn-header {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+      }
+      .datetime {
+        padding: 6px 15px;
+        font-size: 13px;
+      }
+      .intro {
+        padding: 5px 20px 0px;
+        flex-shrink: 0;
+      }
+      .intro h2 {
+        font-size: 20px;
+        margin-bottom: 2px;
+      }
+      .intro p {
+        font-size: 13px;
+        margin-bottom: 0px;
+      }
+      .container {
+        flex: 1;
+        padding: 5px 5% 10px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        max-width: 780px;
+        height: 100%;
+        max-height: 440px;
+        align-content: stretch;
+      }
+      .card {
+        padding: 12px 15px;
+        height: 100%;
+        justify-content: space-between;
+      }
+      .live-icon-container {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+      }
+      .static-icon {
+        width: 45px;
+        height: 45px;
+      }
+      .live-canvas {
+        width: 60px !important;
+        height: 60px !important;
+      }
+      .card h3 {
+        font-size: 14px;
+        margin-bottom: 2px;
+        flex-shrink: 0;
+      }
+      .card-text-area {
+        height: 50px;
+        margin-bottom: 6px;
+      }
+      .card-text-area p {
+        font-size: 11.5px;
+      }
+      .learning-objective {
+        font-size: 10px;
+        padding: 4px 6px;
+      }
+      .badge {
+        font-size: 10px;
+        padding: 3px 10px;
+        margin-top: auto;
+        flex-shrink: 0;
+      }
+      footer {
+        padding: 8px;
+        font-size: 12px;
+        margin-top: 8px;
+        flex-shrink: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      /* Disable floating background blob animations and reduce blur for mobile GPU optimization */
+      .bg-shape {
+        animation: none !important;
+        filter: blur(50px) !important;
+      }
+
+      header { flex-direction: column; text-align: center; padding: 15px; gap: 10px; height: auto; border-radius: 12px; margin-bottom: 15px; }
+      .header-controls { flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%; gap: 8px; }
+      .datetime { width: 100%; text-align: center; order: -1; padding: 8px; font-size: 12px; }
+      .logo { height: 60px; } 
+      .intro { padding: 30px 20px 0; }
+      .menu-grid { grid-template-columns: 1fr; gap: 20px; }
+      .card { padding: 30px 20px; }
+      .btn-header { width: 40px; height: 40px; font-size: 18px; }
+      
+      /* Mobile dropdown visual fix */
+      .dropdown-content {
+        position: fixed !important;
+        top: 75px !important;
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 32px) !important;
+        transform: none !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25) !important;
+        border: 1px solid var(--primary) !important;
+      }
+
+      /* Global mobile side-scroll blocker */
+      html, body {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
+<header>
+    <img src="assets/img/download1.png" alt="Logo QCC" class="logo">
+    <div class="header-controls" id="header-controls">
+      <div class="datetime" id="live-time-text">
+        Memuat waktu...
+      </div>
+      
+      <a href="pages/modul.html" class="btn-header" title="Modul Pembelajaran" style="text-decoration: none;">📘</a>
+
+      <button class="btn-header" onclick="startTour()" title="Mulai Tour" id="tour-btn-header">🚀</button>
+      <button class="btn-header" onclick="openGlossary()" title="Glosarium Lengkap" id="glossary-btn-header">📚</button>
+
+      <div class="dropdown">
+        <button class="btn-header dropdown-btn" onclick="toggleDropdown(event)" title="Panduan Penggunaan">📖</button>
+        <div class="dropdown-content" id="guideDropdown">
+          <h4>Cara Penggunaan:</h4>
+          <p><strong>1.</strong> Pilih salah satu modul QCC Tools di bawah.</p>
+          <p><strong>2.</strong> Masukkan data observasi atau parameter manual pada panel sebelah kiri layar.</p>
+          <p><strong>3.</strong> Amati perubahan grafik dan statistik secara real-time.</p>
+          <p><strong>4.</strong> Baca kotak kesimpulan di panel kanan untuk mendiagnosis pola/anomali.</p>
+          <p><strong>5.</strong> Gunakan fitur Export untuk menyimpan hasil analisis sebagai gambar laporan.</p>
+        </div>
+      </div>
+      <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+    </div>
+  </header>
+
+  <section class="intro" id="intro-section">
+    <h2>Auto QCC Tools Simulation</h2>
+    <p>Kuasai teknik analisis visual untuk mengidentifikasi akar masalah dan menjaga stabilitas proses.</p>
+  </section>
+
+  <div class="container">
+    <div class="menu-grid">
+      <div class="card" id="card-scatter" onclick="window.location='pages/scatter.html'" onmouseenter="startLivePreview('scatter')" onmouseleave="stopLivePreview('scatter')">
+        <div class="live-icon-container">
+            <img class="static-icon" src="https://cdn-icons-png.flaticon.com/512/8660/8660508.png" alt="Scatter Graph">
+            <canvas id="preview-scatter" class="live-canvas"></canvas>
+        </div>
+        <h3>Scatter Diagram</h3>
+        <div class="card-text-area">
+          <p>Analisis hubungan sebab-akibat antara dua variabel independen untuk melihat pola korelasi data.</p>
+          <div class="learning-objective">🎯 <strong>Fokus:</strong> Memahami arah korelasi (positif/negatif) & kekuatan hubungan antar faktor.</div>
+        </div>
+        <span class="badge">Korelasi Data</span>
+      </div>
+
+      <div class="card" id="card-histogram" onclick="window.location='pages/histogram.html'" onmouseenter="startLivePreview('histogram')" onmouseleave="stopLivePreview('histogram')">
+        <div class="live-icon-container">
+            <img class="static-icon" src="https://cdn-icons-png.flaticon.com/512/5760/5760438.png" alt="Histogram">
+            <canvas id="preview-histogram" class="live-canvas"></canvas>
+        </div>
+        <h3>Histogram</h3>
+        <div class="card-text-area">
+          <p>Visualisasi distribusi frekuensi data untuk mengetahui variasi pada sistem dan proses produksi.</p>
+          <div class="learning-objective">🎯 <strong>Fokus:</strong> Membaca sebaran data (normal/skewed) & membandingkannya dengan batas LSL/USL.</div>
+        </div>
+        <span class="badge">Distribusi Data</span>
+      </div>
+
+      <div class="card" id="card-control" onclick="window.location='pages/control-chart.html'" onmouseenter="startLivePreview('control')" onmouseleave="stopLivePreview('control')">
+        <div class="live-icon-container">
+            <img class="static-icon" src="https://cdn-icons-png.flaticon.com/512/7642/7642352.png" alt="Control Chart">
+            <canvas id="preview-control" class="live-canvas"></canvas>
+        </div>
+        <h3>Control Chart</h3>
+        <div class="card-text-area">
+          <p>Pantau batas kendali atas dan bawah untuk memastikan stabilitas proses dari waktu ke waktu.</p>
+          <div class="learning-objective">🎯 <strong>Fokus:</strong> Mendeteksi Out of Control (Outlier, Shift, Trend) & Root Cause Analysis.</div>
+        </div>
+        <span class="badge">Pemantauan Proses</span>
+      </div>
+
+      <div class="card" id="card-pareto" onclick="window.location='pages/pareto.html'" onmouseenter="startLivePreview('pareto')" onmouseleave="stopLivePreview('pareto')">
+        <div class="live-icon-container">
+            <img class="static-icon" src="https://cdn-icons-png.flaticon.com/512/3090/3090116.png" alt="Pareto Chart">
+            <canvas id="preview-pareto" class="live-canvas"></canvas>
+        </div>
+        <h3>Pareto Diagram</h3>
+        <div class="card-text-area">
+          <p>Prioritaskan masalah terbesar berdasarkan prinsip 80/20 untuk fokus perbaikan (Vital Few vs Trivial Many).</p>
+          <div class="learning-objective">🎯 <strong>Fokus:</strong> Mengidentifikasi kontribusi kumulatif & menentukan prioritas RCA.</div>
+        </div>
+        <span class="badge">Prioritas Masalah</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Quality Control Training Dashboard | Crafted by <span>Pak Supri & Go</span>
+  </footer>
+
+
+  <!-- Floating Pre-Test Button -->
+  <button class="btn-pretest-fixed" onclick="togglePreTest()">Coba Yuk 😋</button>
+
+  <!-- Pre-Test Modal Overlay & Card -->
+  <div id="pretestDropdown" class="pretest-dropdown-overlay" onclick="if(event.target === this) closePreTest()">
+    <div class="pretest-modal-card glass">
+      <button class="modal-close-btn" onclick="closePreTest()" aria-label="Tutup">&times;</button>
+      
+      <div id="quizCountdown" class="quiz-countdown">
+        <span id="quizCountdownNumber" class="countdown-number">3</span>
+        <div style="font-weight: 600; color: var(--text-muted); margin-top: 10px;">Bersiap, soal akan segera muncul...</div>
+      </div>
+
+      <div id="quizContent" style="display: none;"></div>
+
+      <div id="quizResult" class="quiz-result">
+        <h3>Skor Akhir Anda: <span id="scoreText">0</span>/100</h3>
+        <p id="scoreMessage">Evaluasi pemahaman Anda di sini.</p>
+        <button class="btn-pretest" style="margin-top: 20px; font-size: 14px;" onclick="closePreTest()">Tutup Kuis</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="glossaryModal" class="modal-overlay" onclick="closeGlossaryOutside(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📚 Glosarium QC</h3>
+        <button class="modal-close" onclick="closeGlossary()">✕</button>
+      </div>
+      
+      <div class="glossary-tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'tab-grafik')">📊 Alat QC</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-statistik')">🔢 Statistik</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-anomali')">⚠️ Anomali</button>
+        <button class="tab-btn" onclick="openTab(event, 'tab-extra')">💡 Lainnya</button>
+      </div>
+
+      <div class="modal-body">
+        <div id="tab-grafik" class="tab-content active">
+          <div class="term-card">
+            <span class="term-tag">Hubungan</span>
+            <span class="term-title">Scatter Diagram</span>
+            <p class="term-desc">Digunakan untuk melihat korelasi antara dua variabel. Membantu membuktikan apakah perubahan pada satu faktor benar-benar menyebabkan perubahan pada faktor lain.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Distribusi</span>
+            <span class="term-title">Histogram</span>
+            <p class="term-desc">Menampilkan sebaran data hasil produksi. Digunakan untuk melihat profil variasi, apakah data berkumpul di tengah atau menyebar luas.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Stabilitas</span>
+            <span class="term-title">Control Chart</span>
+            <p class="term-desc">Peta navigasi proses produksi. Garis ini memberi tahu kita kapan harus membiarkan mesin berjalan dan kapan harus berhenti untuk investigasi.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Prioritas</span>
+            <span class="term-title">Pareto Chart</span>
+            <p class="term-desc">Grafik batang dan garis yang mengurutkan masalah dari yang paling besar ke kecil (Prinsip 80/20). Dipakai buat nentuin prioritas masalah mana yang harus diselesaikan duluan.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Akar Masalah</span>
+            <span class="term-title">Fishbone Diagram (Ishikawa)</span>
+            <p class="term-desc">Diagram tulang ikan buat nyari akar penyebab masalah secara terstruktur berdasarkan kategori 4M1E (Man, Machine, Material, Method, Environment).</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Pengumpulan Data</span>
+            <span class="term-title">Check Sheet (Lembar Periksa)</span>
+            <p class="term-desc">Lembar sederhana untuk mengumpulkan dan mencatat data kejadian (misal jumlah produk cacat) secara real-time di lapangan agar mudah dianalisis nanti.</p>
+          </div>
+        </div>
+
+        <div id="tab-statistik" class="tab-content">
+          <div class="term-card">
+            <span class="term-tag">Target</span>
+            <span class="term-title">UCL / LCL & USL / LSL</span>
+            <p class="term-desc"><b>UCL/LCL:</b> Batas kendali alami "suara mesin" (berdasarkan perhitungan statistik).<br><b>USL/LSL:</b> Batas spesifikasi "permintaan pelanggan" (standar lolos/reject).</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Kapabilitas</span>
+            <span class="term-title">Index Cp & Cpk</span>
+            <p class="term-desc"><b>Cp:</b> Potensi tingkat kepresisian mesin.<br><b>Cpk:</b> Performa aktual/akurasi nyata proses tersebut. Jika Cpk >= 1.33, proses dianggap sangat kapabel.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Tendensi Sentral</span>
+            <span class="term-title">Mean, Median, Mode</span>
+            <p class="term-desc"><b>Mean:</b> Rata-rata dari seluruh data.<br><b>Median:</b> Nilai tengah setelah data diurutkan.<br><b>Mode (Modus):</b> Nilai yang paling sering muncul.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Penyebaran</span>
+            <span class="term-title">Standar Deviasi (Sigma) & Range</span>
+            <p class="term-desc"><b>Sigma:</b> Rata-rata jarak simpangan tiap titik data dari nilai Mean. Makin kecil makin baik.<br><b>Range:</b> Selisih antara nilai paling tinggi (Max) dan paling rendah (Min).</p>
+          </div>
+        </div>
+
+        <div id="tab-anomali" class="tab-content">
+          <div class="term-card">
+            <span class="term-tag">Kekacauan</span>
+            <span class="term-title">Special Cause Variation</span>
+            <p class="term-desc">Gangguan proses yang tidak normal dan sifatnya insidental (listrik mati, sensor kotor, human error) yang harus segera dicari akar masalahnya.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Alami</span>
+            <span class="term-title">Common Cause Variation</span>
+            <p class="term-desc">Variasi wajar yang selalu ada secara konstan di dalam sebuah sistem (misal: getaran alami mesin yang beroperasi). Tidak perlu perlakuan khusus selain *maintenance* rutin.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Pola</span>
+            <span class="term-title">Shift & Trend</span>
+            <p class="term-desc"><b>Shift:</b> Rata-rata data tiba-tiba meloncat drastis ke atas/bawah.<br><b>Trend:</b> Data bergerak naik/turun perlahan secara konstan memanjang.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Kesalahan Setting</span>
+            <span class="term-title">Over-adjustment (Tampering)</span>
+            <p class="term-desc">Terlalu sering menyetel atau mengkalibrasi mesin untuk merespons variasi "Common Cause" yang sebenarnya wajar. Ini justru bikin variasi mesin makin kacau dan tidak stabil.</p>
+          </div>
+        </div>
+
+        <div id="tab-extra" class="tab-content">
+          <div class="term-card">
+            <span class="term-tag">Filosofi</span>
+            <span class="term-title">Henkaten (Change Point)</span>
+            <p class="term-desc">Setiap ada "titik perubahan" pada lini produksi (Manusia, Mesin, Material, Metode), QC harus ekstra waspada karena disitulah anomali paling sering muncul.</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Metode</span>
+            <span class="term-title">PDCA (Plan, Do, Check, Act)</span>
+            <p class="term-desc">Siklus perbaikan kualitas terus-menerus. Rencanakan perbaikan (Plan), lakukan (Do), periksa hasil datanya (Check), lalu standarkan jika berhasil (Act).</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Metode</span>
+            <span class="term-title">5 Why Analysis</span>
+            <p class="term-desc">Teknik bertanya "Kenapa?" sampai 5 kali secara beruntun untuk menggali sebuah insiden sampai menemukan akar penyebab paling dasar (Root Cause).</p>
+          </div>
+          <div class="term-card">
+            <span class="term-tag">Mindset</span>
+            <span class="term-title">Genba (Go to the actual place)</span>
+            <p class="term-desc">Prinsip untuk langsung pergi ke lokasi aktual kejadian (TKP) untuk melihat masalah secara langsung, bukan hanya menebak dari balik meja kerja.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tour-highlight" class="tour-highlight"></div>
+  <div id="tour-tooltip" class="tour-tooltip glass">
+    <h4 id="tour-title">Judul</h4>
+    <p id="tour-text">Deskripsi</p>
+    <div class="tour-buttons">
+      <button class="tour-btn-close" onclick="endTour()">Lewati</button>
+      <div style="display:flex; gap:8px;">
+        <button id="tour-prev" class="tour-btn-prev" onclick="prevTour()">❮ Kembali</button>
+        <button id="tour-next" class="tour-btn-next" onclick="nextTour()">Lanjut ❯</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ===== DETEKSI MOBILE =====
+    const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || ('ontouchstart' in window);
+
+    // ===== JAM & DATE =====
+    startLiveClock('live-time-text');
+    document.getElementById("year").innerHTML = new Date().getFullYear();
+
+    // ===== THEME & DROPDOWN =====
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      document.getElementById('themeBtn').innerHTML = isDark ? "☀️" : "🌙";
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+
+    (function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      const isDark = savedTheme === 'dark';
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeBtn').innerHTML = "☀️";
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('themeBtn').innerHTML = "🌙";
+      }
+    })();
+
+    function toggleDropdown(e) { e.stopPropagation(); document.getElementById("guideDropdown").classList.toggle("show"); }
+    window.onclick = () => document.querySelectorAll(".dropdown-content").forEach(d => d.classList.remove('show'));
+
+    // ===== GLOSARIUM TAB SYSTEM =====
+    function openGlossary() { document.getElementById("glossaryModal").classList.add("show"); }
+    function closeGlossary() { document.getElementById("glossaryModal").classList.remove("show"); }
+    function closeGlossaryOutside(e) { if (e.target.id === "glossaryModal") closeGlossary(); }
+
+    function openTab(evt, tabName) {
+      const tabcontent = document.getElementsByClassName("tab-content");
+      for (let i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+      const tablinks = document.getElementsByClassName("tab-btn");
+      for (let i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
+    }
+
+    // ===== GUIDED TOUR =====
+    const tourSteps = [
+      { target: '#intro-section', title: '👋 Selamat Datang!', text: 'Selamat datang di Dashboard Pelatihan. Ikuti panduan ini ya.' },
+      { target: '#tour-btn-header', title: 'Fitur Tour', text: 'Klik ikon roket ini kapan saja untuk mengulang panduan.' },
+      { target: '#glossary-btn-header', title: 'Glosarium QC', text: 'Kamus sakti buat belajar istilah teknis QC.' },
+      { target: '#card-scatter', title: 'Scatter Diagram', text: 'Cek korelasi antar variabel secara live.' },
+      { target: '#card-histogram', title: 'Histogram', text: 'Visualisasi sebaran variasi proses.' },
+      { target: '#card-control', title: 'Control Chart', text: 'Pantau stabilitas proses tiap saat.' }
+    ];
+    let currentStep = 0;
+
+    function startTour() {
+      currentStep = 0;
+      document.getElementById('tour-highlight').style.display = 'block';
+      const tooltip = document.getElementById('tour-tooltip');
+      tooltip.style.display = 'block';
+      document.body.style.overflow = 'hidden'; 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showStep();
+    }
+
+    function showStep() {
+      const step = tourSteps[currentStep];
+      const targetEl = document.querySelector(step.target);
+      const highlight = document.getElementById('tour-highlight');
+      const tooltip = document.getElementById('tour-tooltip');
+
+      if(targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          const rect = targetEl.getBoundingClientRect();
+          highlight.style.top = (rect.top - 8) + 'px';
+          highlight.style.left = (rect.left - 8) + 'px';
+          highlight.style.width = (rect.width + 16) + 'px';
+          highlight.style.height = (rect.height + 16) + 'px';
+
+          document.getElementById('tour-title').innerHTML = step.title;
+          document.getElementById('tour-text').innerHTML = step.text;
+          
+          let tooltipX = rect.left + (rect.width / 2) - 160; 
+          let tooltipY = rect.bottom + 20;
+          if (tooltipX < 10) tooltipX = 10;
+          if (tooltipX + 320 > window.innerWidth) tooltipX = window.innerWidth - 330;
+          if (tooltipY + 150 > window.innerHeight) tooltipY = rect.top - 180;
+
+          tooltip.style.left = tooltipX + 'px';
+          tooltip.style.top = tooltipY + 'px';
+          tooltip.classList.add('show');
+
+          document.getElementById('tour-prev').style.display = currentStep === 0 ? 'none' : 'inline-block';
+          document.getElementById('tour-next').innerText = currentStep === tourSteps.length - 1 ? 'Selesai 🏁' : 'Lanjut ❯';
+        }, 300);
+      }
+    }
+
+    function nextTour() {
+      if (currentStep < tourSteps.length - 1) { currentStep++; showStep(); } else { endTour(); }
+    }
+    function prevTour() { if (currentStep > 0) { currentStep--; showStep(); } }
+    function endTour() {
+      document.getElementById('tour-highlight').style.display = 'none';
+      document.getElementById('tour-tooltip').style.display = 'none';
+      document.getElementById('tour-tooltip').classList.remove('show');
+      document.body.style.overflow = ''; 
+    }
+
+    // ===== PRE-TEST SCRIPT DENGAN RANDOMIZE 10 SOAL DARI BANK SOAL =====
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let countdownTimer = null;
+    let bgmInterval = null;
+    let currentQuizIndex = 0;
+    let quizScore = 0;
+    let currentQuizSession = []; 
+
+    const quizData = [
+        { q: "Apa fungsi utama dari Scatter Diagram?", options: { A: "Mengukur stabilitas mesin", B: "Melihat korelasi antar dua variabel", C: "Menghitung cacat per hari" }, correct: "B" },
+        { q: "Bentuk Histogram yang 'Menceng Kiri' (Negatively Skewed) berarti?", options: { A: "Ekor kurva memanjang ke arah nilai kecil", B: "Data simetris sempurna", C: "Proses stabil di tengah" }, correct: "A" },
+        { q: "Singkatan dari UCL dan LCL pada Control Chart adalah?", options: { A: "Universal & Lower Center Line", B: "Upper & Lower Control Limit", C: "Upper & Lower Cause Limit" }, correct: "B" },
+        { q: "Terdapat 7 titik beruntun di atas garis rata-rata (CL) pada Control Chart. Pola ini disebut?", options: { A: "Shift (Pergeseran)", B: "Outlier (Titik Ekstrem)", C: "Cycle (Siklus)" }, correct: "A" },
+        { q: "Pola titik Scatter Diagram yang bergerak ke kanan atas menunjukkan korelasi?", options: { A: "Negatif", B: "Tidak ada korelasi", C: "Positif" }, correct: "C" },
+        { q: "Berapa nilai standar minimal Index Cpk agar proses disebut 'Kapabel' (Mumpuni)?", options: { A: "0.50", B: "1.00", C: "1.33" }, correct: "C" },
+        { q: "Apa itu 'Special Cause Variation'?", options: { A: "Variasi alami karena mesin", B: "Gangguan tidak normal akibat faktor luar", C: "Perubahan shift operator" }, correct: "B" },
+        { q: "Apa perbedaan USL/LSL dengan UCL/LCL?", options: { A: "USL/LSL dari pelanggan (Spek), UCL/LCL dari hitungan statistik mesin", B: "USL/LSL dari mesin, UCL/LCL dari pelanggan", C: "Keduanya sama saja" }, correct: "A" },
+        { q: "Istilah 'Henkaten' merujuk pada apa?", options: { A: "Titik Perubahan (Man, Machine, Material, Method)", B: "Kesalahan Operator", C: "Target Produksi Harian" }, correct: "A" },
+        { q: "Membiarkan masalah terjadi lalu memperbaikinya disebut tindakan?", options: { A: "Preventive Action", B: "Corrective Action", C: "Standard Operation" }, correct: "B" },
+        { q: "Prinsip apa yang menjadi dasar dari Pareto Chart?", options: { A: "Prinsip 50/50", B: "Prinsip 80/20 (Vital Few)", C: "Prinsip 100% Quality" }, correct: "B" },
+        { q: "Fishbone Diagram sering juga disebut sebagai diagram?", options: { A: "Ishikawa / Cause and Effect", B: "Gantt Chart", C: "Control Chart" }, correct: "A" },
+        { q: "Metode apa yang digunakan untuk mencari akar masalah hingga ke dasarnya?", options: { A: "5 Why Analysis", B: "Sturges Rule", C: "Random Sampling" }, correct: "A" },
+        { q: "Apa fungsi dari Stratifikasi dalam pengumpulan data QC?", options: { A: "Menggabungkan semua masalah jadi satu", B: "Membagi data ke dalam kelompok/kategori yang lebih spesifik", C: "Menghapus data yang jelek" }, correct: "B" },
+        { q: "Jika ada 6 titik beruntun grafiknya naik terus di Control Chart, itu menandakan?", options: { A: "Trend", B: "Outlier", C: "Cycle" }, correct: "A" },
+        { q: "Bentuk Histogram dengan dua puncak (Bimodal) biasanya mengindikasikan apa?", options: { A: "Data sangat sempurna", B: "Data dari 2 mesin atau 2 shift berbeda tercampur jadi satu", C: "Alat ukur terlalu presisi" }, correct: "B" },
+        { q: "Apa yang diukur oleh Index Cp?", options: { A: "Akurasi mesin terhadap target", B: "Potensi presisi mesin dibandingkan rentang toleransi", C: "Jumlah barang reject" }, correct: "B" },
+        { q: "Tujuan utama penggunaan Check Sheet adalah?", options: { A: "Memudahkan pengumpulan dan pencatatan data secara sistematis", B: "Mencari akar masalah", C: "Membuat laporan keuangan" }, correct: "A" },
+        { q: "Siklus PDCA adalah singkatan dari?", options: { A: "Plan, Do, Correct, Adjust", B: "Plan, Do, Check, Act", C: "Produce, Deliver, Check, Analyze" }, correct: "B" },
+        { q: "Variasi yang selalu ada dan melekat pada sistem/mesin secara alami disebut?", options: { A: "Common Cause Variation", B: "Special Cause Variation", C: "Human Error" }, correct: "A" },
+        { q: "Tindakan mencegah masalah sebelum terjadi disebut?", options: { A: "Corrective Action", B: "Preventive Action", C: "Containment Action" }, correct: "B" },
+        { q: "Scatter Diagram dengan titik-titik yang menyebar acak bulat tanpa pola berarti?", options: { A: "Korelasi Sangat Kuat", B: "Korelasi Negatif", C: "Tidak Ada Korelasi" }, correct: "C" },
+        { q: "Garis tengah (Center Line) pada Control Chart biasanya didapat dari nilai apa?", options: { A: "Mean (Rata-rata)", B: "Mode (Modus)", C: "Nilai Maksimal" }, correct: "A" },
+        { q: "Jika nilai Cp = 1.5 tapi Cpk = 0.5, apa artinya?", options: { A: "Mesin sangat presisi tapi settingannya tidak pas di tengah target (off-center)", B: "Mesin rusak total", C: "Proses sangat aman" }, correct: "A" },
+        { q: "Pada Pareto Chart, garis yang terus naik dari kiri ke kanan melambangkan apa?", options: { A: "Persentase Kumulatif", B: "Jumlah Frekuensi", C: "Batas Kontrol" }, correct: "A" }
+    ];
+    
+    function playTone(freq, type, vol, duration) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function startBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+        let noteIdx = 0;
+        const notes = [300, 350, 400, 350]; 
+        bgmInterval = setInterval(() => {
+            playTone(notes[noteIdx], 'sine', 0.05, 0.1);
+            noteIdx = (noteIdx + 1) % notes.length;
+        }, 500);
+    }
+
+    function stopBGM() {
+        if(bgmInterval) clearInterval(bgmInterval);
+    }
+
+    function togglePreTest() {
+        const panel = document.getElementById('pretestDropdown');
+        if(panel.style.display === 'flex') {
+            closePreTest();
+        } else {
+            panel.style.display = 'flex';
+            startCountdown();
+        }
+    }
+
+    function closePreTest() {
+        document.getElementById('pretestDropdown').style.display = 'none';
+        if(countdownTimer) clearInterval(countdownTimer);
+        stopBGM();
+    }
+
+    function startCountdown() {
+        const countArea = document.getElementById('quizCountdown');
+        const contentArea = document.getElementById('quizContent');
+        const resultArea = document.getElementById('quizResult');
+        const numText = document.getElementById('quizCountdownNumber');
+        
+        countArea.style.display = 'flex';
+        contentArea.style.display = 'none';
+        resultArea.style.display = 'none';
+        numText.style.color = "var(--primary)";
+        
+        // PENGACAKAN 10 SOAL DARI BANK SOAL (Setiap kali mulai ulang)
+        let shuffledBank = [...quizData].sort(() => 0.5 - Math.random());
+        currentQuizSession = shuffledBank.slice(0, 10);
+        
+        currentQuizIndex = 0;
+        quizScore = 0;
+
+        let count = 3;
+        numText.innerText = count;
+        
+        numText.style.animation = 'none';
+        numText.offsetHeight; 
+        numText.style.animation = null;
+        
+        playTone(440, 'sine', 0.1, 0.2);
+
+        if(countdownTimer) clearInterval(countdownTimer);
+
+        countdownTimer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                numText.innerText = count;
+                numText.style.animation = 'none';
+                numText.offsetHeight; 
+                numText.style.animation = null;
+                playTone(440, 'sine', 0.1, 0.2); 
+            } else if (count === 0) {
+                numText.innerText = "Mulai!";
+                numText.style.color = "var(--success)";
+                numText.style.animation = 'none';
+                numText.offsetHeight; 
+                numText.style.animation = null;
+                playTone(880, 'sine', 0.1, 0.5); 
+            } else {
+                clearInterval(countdownTimer);
+                countArea.style.display = 'none';
+                contentArea.style.display = 'block';
+                startBGM();
+                renderQuestion();
+            }
+        }, 1000);
+    }
+
+    function renderQuestion() {
+        const contentArea = document.getElementById('quizContent');
+        if (currentQuizIndex >= currentQuizSession.length) {
+            showFinalResult();
+            return;
+        }
+
+        const q = currentQuizSession[currentQuizIndex];
+        let html = `
+            <div class="quiz-question">
+                <div class="quiz-q-title">Soal ${currentQuizIndex + 1} dari 10:<br> ${q.q}</div>
+                <div class="quiz-options">
+        `;
+        
+        for (const [key, val] of Object.entries(q.options)) {
+            html += `
+                <div class="quiz-opt-btn" id="opt-${key}" onclick="selectAnswer('${key}', '${q.correct}')">
+                    <b>${key}.</b> ${val}
+                </div>
+            `;
+        }
+        
+        html += `</div></div>`;
+        contentArea.innerHTML = html;
+    }
+
+    function selectAnswer(selectedKey, correctKey) {
+        const opts = document.querySelectorAll('.quiz-opt-btn');
+        opts.forEach(opt => opt.onclick = null);
+
+        const selectedBtn = document.getElementById(`opt-${selectedKey}`);
+        const correctBtn = document.getElementById(`opt-${correctKey}`);
+
+        if (selectedKey === correctKey) {
+            selectedBtn.classList.add('correct');
+            quizScore += 10;
+            playTone(800, 'sine', 0.1, 0.1); 
+            setTimeout(() => playTone(1200, 'sine', 0.1, 0.2), 150);
+        } else {
+            selectedBtn.classList.add('wrong');
+            correctBtn.classList.add('correct'); 
+            playTone(200, 'sawtooth', 0.1, 0.4); 
+        }
+
+        setTimeout(() => {
+            currentQuizIndex++;
+            renderQuestion();
+        }, 1500);
+    }
+
+    function showFinalResult() {
+        stopBGM();
+        document.getElementById('quizContent').style.display = 'none';
+        const resultArea = document.getElementById('quizResult');
+        resultArea.style.display = 'block';
+        
+        document.getElementById('scoreText').innerText = quizScore;
+        
+        let msg = "";
+        if (quizScore === 100) msg = "Sempurna! Anda sudah sangat paham materi fundamental Quality Control.";
+        else if (quizScore >= 70) msg = "Bagus! Anda punya dasar yang kuat. Mari perdalam lagi lewat simulasi.";
+        else msg = "Jangan khawatir, tujuan dashboard ini memang untuk belajar. Ayo eksplorasi grafik di bawah!";
+        
+        document.getElementById('scoreMessage').innerText = msg;
+        
+        if(quizScore >= 70) {
+            playTone(500, 'sine', 0.1, 0.1); setTimeout(() => playTone(700, 'sine', 0.1, 0.1), 150); setTimeout(() => playTone(1000, 'sine', 0.1, 0.4), 300);
+        } else {
+            playTone(500, 'sawtooth', 0.1, 0.3); setTimeout(() => playTone(300, 'sawtooth', 0.1, 0.5), 350);
+        }
+    }
+
+    // ===== X-RAY ANIMATION ENGINE =====
+    const chartPreviews = {};
+    const animationIntervals = {};
+    Chart.defaults.plugins.legend.display = false;
+    Chart.defaults.plugins.tooltip.enabled = false;
+    Chart.defaults.animation = false;
+
+    function initChart(type, canvasId) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        let config = { type: 'scatter', options: { responsive: true, maintainAspectRatio: false, devicePixelRatio: Math.min(window.devicePixelRatio, 2), scales: { x: { display: false, min: 0, max: 100 }, y: { display: false, min: 0, max: 100 } }, plugins: { customCanvasBackgroundColor: { color: 'transparent' } } } };
+        
+        if (type === 'scatter') {
+            config.data = { datasets: [{ data: [], backgroundColor: '#257fa8', pointRadius: 4 }, { data: [{x:0, y:0}, {x:100, y:100}], type: 'line', borderColor: '#89CFF0', borderWidth: 2, pointRadius: 0 }] };
+        } else if (type === 'histogram') {
+            config.type = 'bar';
+            config.data = { labels: ['1','2','3','4','5','6','7'], datasets: [{ data: [0,0,0,0,0,0,0], backgroundColor: '#257fa8', borderRadius: 4 }] };
+        } else if (type === 'control') {
+            config.type = 'line';
+            config.data = { labels: ['1','2','3','4','5','6','7','8','9','10'], datasets: [{ data: [], borderColor: '#257fa8', fill: true, backgroundColor: 'rgba(37, 127, 168, 0.2)', tension: 0.3, pointRadius: 3 }, { data: Array(10).fill(50), borderColor: '#2ec4b6', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5 }, { data: Array(10).fill(85), borderColor: '#ef233c', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5 }] };
+        } else if (type === 'pareto') {
+            config.type = 'bar';
+            config.data = { 
+                labels: ['A','B','C','D','E'], 
+                datasets: [
+                    { data: [50, 75, 87, 94, 100], type: 'line', borderColor: '#ef233c', borderWidth: 2, pointRadius: 0 },
+                    { data: [50, 25, 12, 7, 6], backgroundColor: '#257fa8', borderRadius: 4 }
+                ] 
+            };
+            config.options.scales.x.display = false; 
+            config.options.scales.y.max = 100;
+        }
+        return new Chart(ctx, config);
+    }
+
+    chartPreviews['scatter'] = initChart('scatter', 'preview-scatter');
+    chartPreviews['histogram'] = initChart('histogram', 'preview-histogram');
+    chartPreviews['control'] = initChart('control', 'preview-control');
+    chartPreviews['pareto'] = initChart('pareto', 'preview-pareto');
+
+    function startLivePreview(type) {
+        if (isMobileDevice) return;
+        if (animationIntervals[type]) clearInterval(animationIntervals[type]);
+        let counter = 0;
+        let chart = chartPreviews[type];
+        if (type === 'scatter') {
+            animationIntervals[type] = setInterval(() => {
+                let valX = Math.random() * 80 + 10;
+                chart.data.datasets[0].data.push({x: valX, y: valX + (Math.random() * 30 - 15)});
+                if (chart.data.datasets[0].data.length > 15) { chart.data.datasets[0].data.shift(); }
+                chart.update(); 
+            }, 150);
+        } else if (type === 'histogram') {
+            let baseShape = [15, 35, 65, 85, 55, 25, 10];
+            animationIntervals[type] = setInterval(() => {
+                for(let i=0; i<7; i++) {
+                    let fluctuation = (Math.random() * 20) - 10; 
+                    chart.data.datasets[0].data[i] = Math.max(5, baseShape[i] + fluctuation);
+                }
+                chart.update();
+            }, 300);
+        } else if (type === 'control') {
+            animationIntervals[type] = setInterval(() => {
+                chart.data.datasets[0].data.push(Math.random() * 40 + 30);
+                if (chart.data.datasets[0].data.length > 10) { chart.data.datasets[0].data.shift(); }
+                chart.update(); 
+            }, 200);
+        } else if (type === 'pareto') {
+            let baseValues = [50, 25, 12, 7, 6];
+            animationIntervals[type] = setInterval(() => {
+                let fluctuated = baseValues.map((val) => {
+                    let amp = val * 0.15;
+                    let fl = val + (Math.random() * 2 * amp - amp);
+                    return Math.max(1, fl);
+                });
+                fluctuated.sort((a, b) => b - a);
+                let sum = fluctuated.reduce((a, b) => a + b, 0);
+                let cumSum = 0;
+                let cumPercent = fluctuated.map(val => {
+                    cumSum += val;
+                    return (cumSum / sum) * 100;
+                });
+                let scaledBars = fluctuated.map(val => (val / sum) * 100);
+                chart.data.datasets[0].data = cumPercent;
+                chart.data.datasets[1].data = scaledBars;
+                chart.update();
+            }, 300);
+        }
+    }
+    function stopLivePreview(type) { if (animationIntervals[type]) { clearInterval(animationIntervals[type]); animationIntervals[type] = null; } }
+
+  </script>
+  <script src="/js/chatbot.js" defer></script>
+</body>
+</html>

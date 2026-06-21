@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scatter Diagram & Regresi Linear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/design-tokens.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/layouts.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <style>
+        .axis-headers {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .axis-title-input {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            border: none;
+            border-bottom: 2px solid var(--glass-border);
+            padding-bottom: 6px;
+            background: transparent;
+            font-family: var(--font-family);
+            transition: all 0.3s ease;
+            outline: none;
+            min-width: 0;
+        }
+
+        .axis-title-input:focus {
+            border-bottom-color: var(--primary);
+        }
+
+        .vertical-divider {
+            width: 1px;
+            background: var(--glass-border);
+            margin: 0 2px;
+            flex-shrink: 0;
+        }
+
+        .input-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-height: 0;
+        }
+
+
+
+        /* Dedicated Desktop conclusion-box overrides to fit rich detailed analysis */
+        .conclusion-box {
+            max-height: none !important;
+            border-left: 4px solid var(--primary) !important;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .conclusion-box ul {
+            margin-top: var(--space-sm) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+            padding-left: var(--space-md) !important;
+            list-style-type: disc !important;
+        }
+
+        .conclusion-box li {
+            font-size: 12px !important;
+            line-height: 1.6 !important;
+            color: var(--text) !important;
+        }
+
+        .conclusion-box details {
+            margin-top: var(--space-sm) !important;
+            background: var(--card-bg) !important;
+            border: 1px dashed var(--glass-border) !important;
+            border-radius: var(--radius-sm) !important;
+            padding: var(--space-sm) var(--space-md) !important;
+        }
+
+        .conclusion-box details summary {
+            font-weight: 700 !important;
+            color: var(--primary) !important;
+            cursor: pointer !important;
+            outline: none !important;
+        }
+
+        .conclusion-box details summary:hover {
+            color: var(--primary-hover) !important;
+        }
+
+        @media (min-width: 993px) {
+            .right-panel .stats-grid-3 {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .right-panel .stats-grid-3 > div:last-child {
+                grid-column: span 2 !important;
+            }
+            #conclusionBox {
+                max-height: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body id="app-body" class="body-tool">
+
+    <header class="qcc-header">
+        <div id="live-time" class="live-time">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span id="live-time-text">Memuat waktu...</span>
+        </div>
+
+        <div class="header-title">Analisis Scatter Diagram & Regresi Linear </div>
+
+        <div class="header-controls">
+            <button class="btn-header theme-toggle" id="themeBtn" onclick="toggleTheme()" title="Ganti Tema">🌙</button>
+            <a href="../index.html" class="btn-header" title="Kembali ke Home">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="main-wrapper-3col">
+        <div class="qcc-card left-panel">
+
+            <div class="axis-headers">
+                <input type="text" id="xTitleInput" class="axis-title-input" value="Variabel X" oninput="updateChart()"
+                    title="Ubah nama Variabel X">
+                <input type="text" id="yTitleInput" class="axis-title-input" value="Variabel Y" oninput="updateChart()"
+                    title="Ubah nama Variabel Y">
+            </div>
+
+            <div class="inputs-wrapper">
+                <div style="display: flex; gap: 10px; height: 100%;">
+                    <div class="input-grid" id="xInputs"></div>
+                    <div class="vertical-divider"></div>
+                    <div class="input-grid" id="yInputs"></div>
+                </div>
+            </div>
+
+            <div class="btn-group" id="control-buttons">
+                <button class="qcc-btn btn-random" onclick="randomizeData()" title="Acak Data Observasi">🎲
+                    Acak</button>
+                <button class="qcc-btn btn-export" id="exportBtn" onclick="exportFullPage()"
+                    title="Export Laporan Grafik & Statistik">📸 Export</button>
+                <button class="qcc-btn btn-reset" onclick="resetData()" title="Reset Semua Data & Sumbu">🗑️</button>
+            </div>
+
+            <div class="toggle-labels-container">
+                <input type="checkbox" id="showLabelsToggle" class="qcc-checkbox" onchange="toggleDataLabels()">
+                <label for="showLabelsToggle"
+                    style="font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text);">🏷️ Tampilkan Label
+                    Data</label>
+            </div>
+
+            <div class="color-picker-container" id="color-picker">
+                <p>Tema Latar:</p>
+                <div class="color-options">
+                    <div class="color-circle" style="background: #f8f9fa;" onclick="changeBgColor('#f8f9fa')"
+                        title="Terang"></div>
+                    <div class="color-circle" style="background: #2b2d42;" onclick="changeBgColor('#2b2d42')"
+                        title="Gelap Malam"></div>
+                    <div class="color-circle" style="background: #e0fbfc;" onclick="changeBgColor('#e0fbfc')"
+                        title="Biru Es"></div>
+                    <div class="color-circle" style="background: #d8f3dc;" onclick="changeBgColor('#d8f3dc')"
+                        title="Hijau Mint"></div>
+                    <div class="color-circle" style="background: #ffe5d9;" onclick="changeBgColor('#ffe5d9')"
+                        title="Peach Soft"></div>
+                    <div class="color-circle" style="background: #7b2cbf;" onclick="changeBgColor('#7b2cbf')"
+                        title="Ungu Elegan"></div>
+                </div>
+            </div>
+
+            <div class="qcc-info-box" id="qccInfoBox" onclick="this.classList.toggle('active')">
+                <div class="qcc-info-header">📖 Fungsi Chart Ini</div>
+                <div class="qcc-info-content">
+                    Scatter Diagram (Diagram Tebar) digunakan untuk menganalisis dan memetakan hubungan (korelasi)
+                    antara dua variabel: Variabel Bebas (X) dan Variabel Terikat (Y). Alat ini sangat berguna untuk
+                    memverifikasi apakah ada korelasi sebab-akibat yang nyata dan memodelkan garis regresi linear
+                    sebagai dasar prediksi perbaikan proses.
+                </div>
+            </div>
+        </div>
+
+        <div class="qcc-card middle-panel">
+            <button class="btn-goto-input"
+                onclick="scrollToInput()">✍️ Input / Edit
+                Data</button>
+            <h3 class="panel-title">📈 Visualisasi Scatter & Garis Regresi</h3>
+            <div class="chart-container">
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+
+        <div class="qcc-card right-panel">
+            <h3 class="panel-title">📊 Hasil Analisis Regresi & Korelasi</h3>
+            <div class="qcc-card collapsible-card collapsed" id="statistik" style="padding: var(--space-md); margin-bottom: 0px;">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)">
+                    <div class="panel-title" style="margin-bottom: 0; border: none; padding: 0;">📊 Ringkasan Statistik</div>
+                    <span class="chevron">▼</span>
+                </div>
+                <div class="card-content" style="margin-top: 12px;">
+                    <div id="statOutput" class="stats-grid-3">
+                        <div class="stat-box">
+                            <div class="stat-title">Persamaan Regresi
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Garis prediksi (Trendline). Angka di depan 'x' menunjukkan seberapa besar Y berubah jika X naik 1 satuan.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value">ŷ = -</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-title">Koefisien Korelasi (r)
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Kekuatan hubungan X & Y. Nilai mendekati 1 atau -1 berarti hubungannya sangat kuat. Mendekati 0 berarti acak/lemah.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-title">Koefisien Determinasi (R²)
+                                <span class="tooltip-container">
+                                    <span class="tooltip-icon">?</span>
+                                    <span class="tooltip-text">Persentase seberapa besar Variabel X mempengaruhi perubahan pada Variabel Y. Sisanya dipengaruhi faktor lain di luar grafik.</span>
+                                </span>
+                            </div>
+                            <div class="stat-value">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="conclusion-box collapsible-card collapsed" id="conclusionBox"
+                style="margin-top: var(--space-md);">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)"
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--glass-border); padding-bottom: 6px; margin-bottom: 8px;">
+                    <div class="conclusion-title" id="conclusionIcon"
+                        style="margin-bottom: 0 !important; display: flex; align-items: center; gap: 6px;">💡 Menunggu Data</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button class="btn-focus-trigger"
+                            onclick="event.stopPropagation(); QCC.openFocusModal('Scatter Diagram')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="conclusion-text" id="conclusionText">
+                        Silakan input minimal 2 pasangan data observasi X dan Y untuk melihat analisis korelasi dan
+                        regresi linear.
+                    </div>
+                </div>
+            </div>
+
+            <div class="qcc-card collapsible-card collapsed" style="margin-top: var(--space-md); padding: 12px 15px;">
+                <div class="clickable-header" onclick="QCC.toggleCard(this)" style="margin-bottom: 8px;">
+                    <h4 class="panel-title"
+                        style="margin-bottom: 0; border: none; padding: 0; font-size: 12.5px; color: var(--primary); font-weight: 700; text-transform: uppercase;">
+                        🧮 Rumus Perhitungan</h4>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-focus-trigger" onclick="event.stopPropagation(); QCC.openFocusModal('Scatter Diagram')">🔍 Fokus</button>
+                        <span class="chevron">▼</span>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div id="formulaContainer">
+                        <div class="formula-grid">
+                            <div class="formula-box">
+                                <div class="formula-name">Koefisien Korelasi Pearson (r)</div>
+                                <div class="math-block" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; font-size: 12.5px;">
+                                    <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                                        <span class="formula-term" data-tooltip="r: Koefisien korelasi Pearson.">r</span>&nbsp;=&nbsp;
+                                        <div class="math-frac" style="vertical-align: middle;">
+                                            <span class="math-num">
+                                                <span class="formula-term" data-tooltip="N: Jumlah total pasangan data X & Y.">N</span><span class="formula-term" data-tooltip="ΣXY: Hasil penjumlahan dari perkalian X dan Y.">ΣXY</span> - (<span class="formula-term" data-tooltip="ΣX: Jumlah total data X.">ΣX</span>)(<span class="formula-term" data-tooltip="ΣY: Jumlah total data Y.">ΣY</span>)
+                                            </span>
+                                            <span class="math-den" style="display: inline-flex; align-items: center; justify-content: center;">
+                                                <span class="math-sqrt-sym" style="font-size: 1.25em; vertical-align: middle; margin-top: -2px;">√</span>
+                                                <span class="math-sqrt" style="border-top: 1.5px solid var(--text); padding-top: 1px; vertical-align: middle;">
+                                                    [<span class="formula-term" data-tooltip="N: Jumlah total pasangan data.">N</span><span class="formula-term" data-tooltip="ΣX²: Jumlah total dari X kuadrat.">ΣX²</span> - (<span class="formula-term" data-tooltip="ΣX: Jumlah total data X.">ΣX</span>)²] [<span class="formula-term" data-tooltip="N: Jumlah total pasangan data.">N</span><span class="formula-term" data-tooltip="ΣY²: Jumlah total dari Y kuadrat.">ΣY²</span> - (<span class="formula-term" data-tooltip="ΣY: Jumlah total data Y.">ΣY</span>)²]
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style="width: 100%; border-top: 1px dashed var(--glass-border); padding-top: 8px; font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; align-items: center;">
+                                        <div>Pembilang = <span class="formula-term" data-tooltip="N: Jumlah pasangan data.">N</span><span class="formula-term" data-tooltip="ΣXY: Jumlah perkalian X & Y.">ΣXY</span> - <span class="formula-term" data-tooltip="ΣX: Jumlah X.">ΣX</span><span class="formula-term" data-tooltip="ΣY: Jumlah Y.">ΣY</span></div>
+                                        <div>Penyebut = <span class="math-sqrt-sym" style="font-size: 1.1em; vertical-align: middle; margin-top: -2px;">√</span><span class="math-sqrt" style="border-top: 1.1px solid var(--text); padding-top: 1px;">[<span class="formula-term" data-tooltip="N: Jumlah pasangan data.">N</span><span class="formula-term" data-tooltip="ΣX²: Jumlah X kuadrat.">ΣX²</span> - (<span class="formula-term" data-tooltip="ΣX: Jumlah X.">ΣX</span>)²] [<span class="formula-term" data-tooltip="N: Jumlah pasangan data.">N</span><span class="formula-term" data-tooltip="ΣY²: Jumlah Y kuadrat.">ΣY²</span> - (<span class="formula-term" data-tooltip="ΣY: Jumlah Y.">ΣY</span>)²]</span></div>
+                                    </div>
+                                </div>
+                                <div class="formula-desc">Mengukur kekuatan dan arah hubungan linear antara variabel X dan Y. Nilai mendekati 1 atau -1 berarti hubungan erat, mendekati 0 berarti hubungan lemah/acak.</div>
+                            </div>
+
+                            <div class="formula-box">
+                                <div class="formula-name">Koefisien Determinasi (R²)</div>
+                                <div class="math-block" style="padding: 10px; font-size: 13.5px;">
+                                    <span class="formula-term" data-tooltip="R²: Koefisien determinasi.">R²</span>&nbsp;=&nbsp;(<span class="formula-term" data-tooltip="r: Koefisien korelasi Pearson.">r</span>)²
+                                </div>
+                                <div class="formula-desc">Menunjukkan persentase kontribusi pengaruh variabel bebas X terhadap naik-turunnya variabel terikat Y. Sisanya ditentukan faktor lain di luar model.</div>
+                            </div>
+
+                            <div class="formula-box">
+                                <div class="formula-name">Persamaan Regresi Linier (ŷ)</div>
+                                <div class="math-block" style="padding: 10px; font-size: 13.5px;">
+                                    <span class="formula-term" data-tooltip="ŷ: Nilai Y hasil prediksi.">ŷ</span>&nbsp;=&nbsp;<span class="formula-term" data-tooltip="a: Intercept (nilai Y saat X=0).">a</span>&nbsp;+&nbsp;<span class="formula-term" data-tooltip="b: Slope (kemiringan garis).">b</span><span class="formula-term" data-tooltip="X: Nilai input variabel bebas X.">X</span>
+                                </div>
+                                <div class="formula-desc">Model matematika garis lurus (trendline) untuk memprediksi nilai variabel Y berdasarkan nilai variabel X.</div>
+                            </div>
+
+                            <div class="formula-box">
+                                <div class="formula-name">Kemiringan Garis / Slope (b)</div>
+                                <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 13px;">
+                                    <span class="formula-term" data-tooltip="b: Slope (kemiringan garis regresi).">b</span>&nbsp;=&nbsp;
+                                    <div class="math-frac">
+                                        <span class="math-num">
+                                            <span class="formula-term" data-tooltip="N: Jumlah total pasangan data.">N</span><span class="formula-term" data-tooltip="ΣXY: Jumlah perkalian X dan Y.">ΣXY</span> - (<span class="formula-term" data-tooltip="ΣX: Jumlah total data X.">ΣX</span>)(<span class="formula-term" data-tooltip="ΣY: Jumlah total data Y.">ΣY</span>)
+                                        </span>
+                                        <span class="math-den">
+                                            <span class="formula-term" data-tooltip="N: Jumlah total pasangan data.">N</span><span class="formula-term" data-tooltip="ΣX²: Jumlah total dari X kuadrat.">ΣX²</span> - (<span class="formula-term" data-tooltip="ΣX: Jumlah total data X.">ΣX</span>)²
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="formula-desc">Slope (b) mengukur laju perubahan nilai Y jika variabel X naik sebesar 1 satuan. Menunjukkan arah hubungan tren.</div>
+                            </div>
+
+                            <div class="formula-box">
+                                <div class="formula-name">Titik Potong / Intercept (a)</div>
+                                <div class="math-block" style="display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 13px;">
+                                    <span class="formula-term" data-tooltip="a: Intercept (perpotongan sumbu Y).">a</span>&nbsp;=&nbsp;
+                                    <div class="math-frac">
+                                        <span class="math-num">
+                                            <span class="formula-term" data-tooltip="ΣY: Jumlah total data Y.">ΣY</span> - <span class="formula-term" data-tooltip="b: Nilai slope (kemiringan) yang sudah dihitung.">b</span>(<span class="formula-term" data-tooltip="ΣX: Jumlah total data X.">ΣX</span>)
+                                        </span>
+                                        <span class="math-den">
+                                            <span class="formula-term" data-tooltip="N: Jumlah total pasangan data.">N</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="formula-desc">Intercept (a) adalah nilai awal perkiraan Y ketika nilai variabel bebas X sama dengan nol (titik potong garis pada sumbu tegak Y).</div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: 10px; border-top: 1px dashed var(--glass-border); padding-top: 8px; font-size: 11px; display: flex; flex-wrap: wrap; gap: 8px; color: var(--text-main);">
+                            <b>Glosarium Hubungan X & Y:</b>
+                            <span class="formula-term"
+                                data-tooltip="Variabel Bebas (X) adalah faktor penyebab yang dianalisis (seperti suhu oven, kecepatan konveyor).">Variabel
+                                X</span> |
+                            <span class="formula-term"
+                                data-tooltip="Variabel Terikat (Y) adalah variabel hasil yang dipengaruhi (seperti persentase penyok, berat produk).">Variabel
+                                Y</span> |
+                            <span class="formula-term"
+                                data-tooltip="Korelasi Pearson (r) mengukur kekuatan hubungan: jika mendekati 1/ -1 hubungan sangat erat; jika mendekati 0 tidak ada hubungan.">Korelasi
+                                (r)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/utils.js"></script>
+    <script src="../js/chart-config.js"></script>
+    <script src="../js/export.js"></script>
+    <script>
+        // --- JAM LIVE SCRIPT ---
+        startLiveClock('live-time-text');
+
+        // --- VARIABEL GLOBAL UNTUK ANIMASI ---
+        const isMobileDevice = window.matchMedia("(max-width: 768px)").matches || ('ontouchstart' in window);
+        let originalDataPoints = [];
+        let floatAnimationTime = 0;
+        let floatInterval = null;
+
+        // --- CHART & DATA SCRIPT ---
+        const xContainer = document.getElementById("xInputs");
+        const yContainer = document.getElementById("yInputs");
+        const totalInputs = 20;
+
+        for (let i = 1; i <= totalInputs; i++) {
+            let inputX = document.createElement("input");
+            inputX.type = "number";
+            inputX.className = "data-input";
+            inputX.placeholder = "X " + i;
+            inputX.oninput = updateChart;
+            xContainer.appendChild(inputX);
+
+            let inputY = document.createElement("input");
+            inputY.type = "number";
+            inputY.className = "data-input";
+            inputY.placeholder = "Y " + i;
+            inputY.oninput = updateChart;
+            yContainer.appendChild(inputY);
+        }
+
+        // --- FITUR COPY-PASTE DARI EXCEL ---
+        document.querySelector('.inputs-wrapper').addEventListener('paste', function (e) {
+            QCC.handleScatterExcelPaste(e, '#xInputs', '#yInputs', updateChart);
+        });
+
+        const customCanvasBackgroundColor = {
+            id: 'customCanvasBackgroundColor',
+            beforeDraw: (chart, args, options) => {
+                const { ctx } = chart;
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = options.color || 'transparent';
+                ctx.fillRect(0, 0, chart.width, chart.height);
+                ctx.restore();
+            }
+        };
+
+        const ctx = document.getElementById("scatterChart").getContext("2d");
+        let initialChartFontColor = '#2b2d42';
+
+        Chart.defaults.animation = false;
+
+        let scatterChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Data Observasi',
+                        data: [],
+                        backgroundColor: '#257fa8',
+                        borderColor: 'rgba(37, 127, 168, 0.8)',
+                        pointRadius: 6,
+                        pointHoverRadius: 10,
+                        pointHoverBackgroundColor: '#fca311',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2,
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Garis Regresi',
+                        data: [],
+                        type: 'line',
+                        borderColor: '#ef233c',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }
+                ]
+            },
+            options: {
+                ...getDefaultChartOptions(QCC.isMobile),
+                animation: false,
+                animations: false,
+                transitions: {
+                    active: {
+                        animation: {
+                            duration: 0
+                        }
+                    }
+                },
+                layout: {
+                    padding: getChartPadding()
+                },
+                events: QCC.isMobile ? ['click', 'touchstart'] : ['mousemove', 'mouseout', 'click', 'touchstart'],
+                interaction: {
+                    mode: 'nearest',
+                    intersect: true,
+                },
+                plugins: {
+                    ...getDefaultChartOptions(QCC.isMobile).plugins,
+                    legend: {
+                        labels: { color: initialChartFontColor, font: { family: "'Poppins', sans-serif", size: getChartFontSize(12) }, usePointStyle: true }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        titleFont: { family: "'Poppins', sans-serif", size: getChartFontSize(12) },
+                        bodyFont: { family: "'Poppins', sans-serif", size: getChartFontSize(12), weight: 'bold' },
+                        padding: 8, displayColors: false,
+                        callbacks: {
+                            label: function (context) {
+                                if (context.datasetIndex === 1) return null;
+                                let xLabel = document.getElementById("xTitleInput").value || 'X';
+                                let yLabel = document.getElementById("yTitleInput").value || 'Y';
+                                let origY = originalDataPoints[context.dataIndex].y;
+                                return [`${xLabel} : ${formatTickLabel(context.parsed.x)}`, `${yLabel} : ${formatTickLabel(origY)}`];
+                            }
+                        }
+                    },
+                    qccDataLabels: { enabled: false }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Variabel X', color: initialChartFontColor, font: { family: "'Poppins', sans-serif", weight: 'bold', size: getChartFontSize(12) } },
+                        grid: { color: 'rgba(0,0,0,0.1)', drawBorder: false },
+                        ticks: {
+                            color: initialChartFontColor,
+                            font: { family: "'Poppins', sans-serif", size: getChartFontSize(11) },
+                            maxTicksLimit: getMaxTicksLimit(),
+                            autoSkip: true,
+                            callback: function (value) {
+                                return formatTickLabel(value);
+                            }
+                        }
+                    },
+                    y: {
+                        title: { display: true, text: 'Variabel Y', color: initialChartFontColor, font: { family: "'Poppins', sans-serif", weight: 'bold', size: getChartFontSize(12) } },
+                        grid: { color: 'rgba(0,0,0,0.1)', drawBorder: false },
+                        ticks: {
+                            color: initialChartFontColor,
+                            font: { family: "'Poppins', sans-serif", size: getChartFontSize(11) },
+                            maxTicksLimit: getMaxTicksLimit(),
+                            autoSkip: true,
+                            callback: function (value) {
+                                return formatTickLabel(value);
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [customCanvasBackgroundColor]
+        });
+
+        // --- FUNGSI ANIMASI MENGAPUNG (FLOATING) ---
+        function startFloatingEffect() {
+            if (floatInterval) clearInterval(floatInterval);
+            return;
+        }
+
+        function updateChart() {
+            let namaX = document.getElementById("xTitleInput").value || "Variabel X";
+            let namaY = document.getElementById("yTitleInput").value || "Variabel Y";
+
+            scatterChart.options.scales.x.title.text = namaX;
+            scatterChart.options.scales.y.title.text = namaY;
+
+            let xInputs = xContainer.querySelectorAll(".data-input");
+            let yInputs = yContainer.querySelectorAll(".data-input");
+
+            let x = [], y = [], dataPoints = [];
+
+            // Simpan ke localStorage
+            saveToStorage('scatter', {
+                xValues: Array.from(xInputs).map(i => i.value),
+                yValues: Array.from(yInputs).map(i => i.value),
+                xTitle: namaX,
+                yTitle: namaY
+            });
+
+            for (let i = 0; i < totalInputs; i++) {
+                let xv = safeParseNumber(xInputs[i].value);
+                let yv = safeParseNumber(yInputs[i].value);
+                if (xv !== null && yv !== null) {
+                    x.push(xv);
+                    y.push(yv);
+                    dataPoints.push({ x: xv, y: yv });
+                }
+            }
+
+            originalDataPoints = JSON.parse(JSON.stringify(dataPoints));
+
+            // 1. Validasi data kosong
+            let totalValids = x.length;
+            if (totalValids === 0) {
+                scatterChart.data.datasets[0].data = [];
+                scatterChart.data.datasets[1].data = [];
+                delete scatterChart.options.scales.x.min;
+                delete scatterChart.options.scales.x.max;
+                delete scatterChart.options.scales.y.min;
+                delete scatterChart.options.scales.y.max;
+                scatterChart.update('none');
+                if (floatInterval) clearInterval(floatInterval);
+                resetStatistikUI();
+                return;
+            }
+
+            // 2. Validasi data tidak cukup (< 2 pasang)
+            if (totalValids < 2) {
+                scatterChart.data.datasets[0].data = dataPoints;
+                scatterChart.data.datasets[1].data = [];
+                delete scatterChart.options.scales.x.min;
+                delete scatterChart.options.scales.x.max;
+                delete scatterChart.options.scales.y.min;
+                delete scatterChart.options.scales.y.max;
+                scatterChart.update('none');
+                if (floatInterval) clearInterval(floatInterval);
+
+                resetStatistikUI();
+                const box = document.getElementById("conclusionBox");
+                if (box) {
+                    const isCollapsed = box.classList.contains("collapsed");
+                    box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} warning`;
+                    box.innerHTML = `
+                        <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                            <span class="conclusion-icon">⚠️ Data Belum Cukup</span>
+                            <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                        </div>
+                        <div class="conclusion-content collapsible-content">
+                            <div class="conclusion-text">Data belum cukup untuk membuat analisis yang valid. Masukkan minimal 2 pasang data (X dan Y).</div>
+                        </div>
+                    `;
+                    box.style.display = "block";
+                }
+                return;
+            }
+
+            let n = x.length;
+            let sumX = x.reduce((a, b) => a + b, 0);
+            let sumY = y.reduce((a, b) => a + b, 0);
+            let sumXY = x.reduce((acc, val, i) => acc + val * y[i], 0);
+            let sumX2 = x.reduce((acc, val) => acc + val * val, 0);
+            let sumY2 = y.reduce((acc, val) => acc + val * val, 0);
+
+            let denominator = (n * sumX2 - sumX * sumX);
+
+            // 3. Validasi penyebut regresi = 0 (Semua X bernilai konstan)
+            if (denominator === 0) {
+                scatterChart.data.datasets[0].data = dataPoints;
+                scatterChart.data.datasets[1].data = [];
+                delete scatterChart.options.scales.x.min;
+                delete scatterChart.options.scales.x.max;
+                delete scatterChart.options.scales.y.min;
+                delete scatterChart.options.scales.y.max;
+                scatterChart.update('none');
+                if (floatInterval) clearInterval(floatInterval);
+
+                resetStatistikUI();
+                const box = document.getElementById("conclusionBox");
+                if (box) {
+                    const isCollapsed = box.classList.contains("collapsed");
+                    box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} warning`;
+                    box.innerHTML = `
+                        <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                            <span class="conclusion-icon">⚠️ Variasi X Nol</span>
+                            <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                        </div>
+                        <div class="conclusion-content collapsible-content">
+                            <div class="conclusion-text">Semua nilai variabel X bernilai sama. Tidak dapat membuat garis regresi karena tidak ada variasi pada variabel X.</div>
+                        </div>
+                    `;
+                    box.style.display = "block";
+                }
+                return;
+            }
+
+            let b = (n * sumXY - sumX * sumY) / denominator;
+            let a = (sumY - b * sumX) / n;
+
+            let rDenominator2 = denominator * (n * sumY2 - sumY * sumY);
+            let rDenominator = rDenominator2 <= 0 ? 0 : Math.sqrt(rDenominator2);
+            let r = rDenominator === 0 ? 0 : (n * sumXY - sumX * sumY) / rDenominator;
+            let r2 = r * r;
+
+            let minX = Math.min(...x);
+            let maxX = Math.max(...x);
+            let marginX = (maxX - minX) * 0.1 || 1;
+
+            scatterChart.data.datasets[0].data = dataPoints;
+            scatterChart.data.datasets[1].data = [
+                { x: minX - marginX, y: a + b * (minX - marginX) },
+                { x: maxX + marginX, y: a + b * (maxX + marginX) }
+            ];
+
+            // === KUNCI SUMBU X DAN Y BIAR GAK GOYANG/RESCALE ===
+            let allY = [...y, a + b * (minX - marginX), a + b * (maxX + marginX)];
+            let absoluteMinY = Math.min(...allY);
+            let absoluteMaxY = Math.max(...allY);
+            let marginY = (absoluteMaxY - absoluteMinY) * 0.1 || 10;
+
+            scatterChart.options.scales.x.min = minX - marginX;
+            scatterChart.options.scales.x.max = maxX + marginX;
+            scatterChart.options.scales.y.min = absoluteMinY - marginY;
+            scatterChart.options.scales.y.max = absoluteMaxY + marginY;
+
+            document.getElementById("statOutput").innerHTML = `
+            <div class="stat-box">
+                <div class="stat-title">Persamaan Regresi 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Garis prediksi (Trendline). Angka di depan 'x' menunjukkan seberapa besar Y berubah jika X naik 1 satuan.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">ŷ = ${a.toFixed(4)} ${b >= 0 ? '+' : ''} ${b.toFixed(4)}x</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Koefisien Korelasi (r) 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Kekuatan hubungan X & Y. Nilai mendekati 1 or -1 berarti hubungannya sangat kuat. Mendekati 0 berarti acak/lemah.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">${r.toFixed(4)}</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Koefisien Determinasi (R²) 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Persentase seberapa besar Variabel X mempengaruhi perubahan pada Variabel Y. Sisanya dipengaruhi faktor lain di luar grafik.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">${r2.toFixed(4)}</div>
+            </div>
+        `;
+
+            generateConclusion(a, b, r, r2, namaX, namaY);
+            startFloatingEffect();
+
+            scatterChart.options.plugins.qccDataLabels.enabled = document.getElementById("showLabelsToggle").checked;
+            scatterChart.update('none');
+        }
+
+        function generateConclusion(a, b, r, r2, namaX, namaY) {
+            let absR = Math.abs(r);
+            let penjelasanHubungan = "";
+
+            if (absR >= 0.6) {
+                let arah = r >= 0 ? "makin tinggi/parah" : "makin turun/berkurang";
+                penjelasanHubungan = `✅ <b>Ternyata Ada Hubungannya!</b> Grafik nunjukin makin tinggi faktor <b>${namaX}</b>, maka <b>${namaY}</b> akan ${arah}.<br><b>Tapi ingat!</b> Jangan cuma percaya grafik di layar, WAJIB jalan ke Genba SEKARANG buat pastikan dan raba langsung ke fisik mesinnya!`;
+            } else if (absR >= 0.4) {
+                penjelasanHubungan = `⚠️ <b>Hubungan Kurang Jelas.</b> Ada sedikit pengaruh antara <b>${namaX}</b> dengan <b>${namaY}</b>, tapi di lapangan pasti banyak faktor <i>Henkaten</i> lain yang ikut main. Cek faktor 4M lain di Genba!`;
+            } else {
+                penjelasanHubungan = `❌ <b>Gak Ada Hubungannya!</b> Jangan buang waktu ngutak-ngatik parameter <b>${namaX}</b> ini karena ternyata bukan itu penyebab <b>${namaY}</b>. Cari penyebab/kemungkinan lain di area kerja.`;
+            }
+
+            let persentaseR2 = (r2 * 100).toFixed(1);
+            let sisaR2 = (100 - parseFloat(persentaseR2)).toFixed(1);
+            let kekuatanR = absR >= 0.6 ? "Kuat" : (absR >= 0.4 ? "Lumayan (Sedang)" : "Lemah / Gak Ngaruh");
+            let arahR = r >= 0 ? "Searah (Sama-sama Naik)" : "Berlawanan (Satu Naik, Satu Turun)";
+            let prediksiArah = b >= 0 ? "naik/bertambah" : "turun/berkurang";
+
+            let htmlText = `
+            <div style="margin-top: 4px; margin-bottom: 12px; padding: 12px 16px; border-left: 4px solid var(--primary); background: var(--card-bg); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); font-size: 13px; line-height: 1.6; color: var(--text);">${penjelasanHubungan}</div>
+            
+            <div style="margin-top: 16px; font-size: 12.5px; color: var(--text);">
+                <b>📌 Bedah Angka Statistik (Bahasa Lapangan):</b>
+                <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; line-height: 1.5; color: var(--text-muted);">
+                    <li><b>Kekuatan Hubungan (Korelasi r = ${r.toFixed(2)}):</b><br>
+                        Angka ini nunjukin seberapa kompak kedua faktor ini saling narik. Kekuatannya terdeteksi <b>${kekuatanR}</b> dengan pola <b>${arahR}</b>.
+                    </li>
+                    <li><b>Persentase Biang Kerok (R² = ${persentaseR2}%):</b><br>
+                        Dari semua kemungkinan penyebab masalah, parameter <b>${namaX}</b> ini menyumbang sekitar <b>${persentaseR2}%</b> pengaruh terhadap jebolnya/berubahnya nilai <b>${namaY}</b>. Sisa <b>${sisaR2}%</b>-nya dipengaruhi oleh faktor misterius lain di luar grafik (misal: fluktuasi voltase listrik, debu di area kerja, atau suhu cairan <i>coolant</i>).
+                    </li>
+                    <li><b>Simulasi Setting Mesin (Y = ${a.toFixed(2)} ${b >= 0 ? '+' : '-'} ${Math.abs(b).toFixed(2)}X):</b><br>
+                        Anggaplah ini rumus ramalan: Kalau mesin lagi <i>idle</i> (faktor <b>${namaX}</b> nilainya nol), maka dasar nilai <b>${namaY}</b> udah nongkrong di angka <b>${a.toFixed(2)}</b>. Nah, setiap kali operator naikin settingan <b>${namaX}</b> sebanyak 1 klik/poin, maka nilai <b>${namaY}</b> otomatis akan merespons <b>${prediksiArah} sebanyak ${Math.abs(b).toFixed(2)} poin</b>.
+                    </li>
+                </ul>
+            </div>
+        `;
+
+            const box = document.getElementById("conclusionBox");
+            if (box) {
+                const isCollapsed = box.classList.contains("collapsed");
+                box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''} success`;
+                box.innerHTML = `
+                    <div class="conclusion-header collapsible-header" onclick="QCC.toggleCard(this)">
+                        <span class="conclusion-icon">💡 Kesimpulan Analisis</span>
+                        <i class="fas fa-chevron-down toggle-icon" aria-hidden="true"></i>
+                    </div>
+                    <div class="conclusion-content collapsible-content">
+                        <div class="conclusion-text">${htmlText}</div>
+                        <button class="qcc-btn btn-focus-trigger" onclick="QCC.openFocusModal()" style="margin-top: var(--space-md); width: 100%;"><i class="fas fa-expand-arrows-alt"></i> Buka Layar Penuh</button>
+                    </div>
+                `;
+                box.style.display = "block";
+            }
+
+            applyCurrentThemeToConclusion();
+        }
+
+        function resetData() {
+            if (!confirm("Yakin ingin reset semua data dan parameter?")) return;
+            document.querySelectorAll(".data-input").forEach(i => i.value = "");
+            document.getElementById("xTitleInput").value = "Variabel X";
+            document.getElementById("yTitleInput").value = "Variabel Y";
+            originalDataPoints = [];
+            scatterChart.data.datasets[0].data = [];
+            scatterChart.data.datasets[1].data = [];
+
+            delete scatterChart.options.scales.x.min;
+            delete scatterChart.options.scales.x.max;
+            delete scatterChart.options.scales.y.min;
+            delete scatterChart.options.scales.y.max;
+
+            scatterChart.update('none');
+            if (floatInterval) clearInterval(floatInterval);
+            clearStorage('scatter');
+            resetStatistikUI();
+        }
+
+        function resetStatistikUI() {
+            document.getElementById("statOutput").innerHTML = `
+            <div class="stat-box">
+                <div class="stat-title">Persamaan Regresi 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Garis prediksi (Trendline). Angka di depan 'x' menunjukkan seberapa besar Y berubah jika X naik 1 satuan.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">ŷ = -</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Koefisien Korelasi (r) 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Kekuatan hubungan X & Y. Nilai mendekati 1 or -1 berarti hubungannya sangat kuat. Mendekati 0 berarti acak/lemah.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-title">Koefisien Determinasi (R²) 
+                    <span class="tooltip-container">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">Persentase seberapa besar Variabel X mempengaruhi perubahan pada Variabel Y. Sisanya dipengaruhi faktor lain di luar grafik.</span>
+                    </span>
+                </div> 
+                <div class="stat-value">-</div>
+            </div>
+        `;
+            const box = document.getElementById("conclusionBox");
+            const isCollapsed = box.classList.contains("collapsed");
+            box.className = `conclusion-box collapsible-card ${isCollapsed ? 'collapsed' : ''}`;
+            document.getElementById("conclusionIcon").innerHTML = "💡 Menunggu Data";
+            document.getElementById("conclusionText").innerHTML = "Silakan input minimal 2 pasangan data observasi X dan Y untuk melihat analisis korelasi dan regresi linear.";
+            box.style.display = "block";
+        }
+
+        function changeBgColor(colorHex) {
+            QCC.changeBgColor(colorHex, scatterChart, 'scatter_bg');
+        }
+
+        function applyCurrentThemeToConclusion() {
+            let isDark = document.body.classList.contains('dark-mode');
+            let highlights = document.querySelectorAll('.conclusion-box b.highlight');
+            let statTitle = document.querySelectorAll('.stat-title');
+
+            highlights.forEach(el => { el.style.color = isDark ? '#89CFF0' : '#1d3557'; });
+            statTitle.forEach(el => { el.style.color = isDark ? '#89CFF0' : '#257fa8'; });
+        }
+
+        function toggleTheme() {
+            QCC.toggleTheme(scatterChart, 'scatter_bg');
+        }
+
+        function randomizeData() {
+            let xInputs = xContainer.querySelectorAll(".data-input");
+            let yInputs = yContainer.querySelectorAll(".data-input");
+            let isPositiveTrend = Math.random() > 0.5;
+
+            for (let i = 0; i < totalInputs; i++) {
+                let randomX = Math.floor(Math.random() * 90) + 10;
+                let randomY = isPositiveTrend ? Math.floor((randomX * (Math.random() * 0.8 + 0.2)) + (Math.random() * 40)) : Math.floor(((100 - randomX) * (Math.random() * 0.8 + 0.2)) + (Math.random() * 40));
+
+                xInputs[i].value = randomX;
+                yInputs[i].value = randomY;
+            }
+            updateChart();
+        }
+
+        async function exportFullPage() {
+            await exportPageAsPNG({
+                exportBtnId: 'exportBtn',
+                fileName: 'Laporan-Analisis-Regresi.png',
+                chartInstance: scatterChart
+            });
+        }
+
+        function toggleDataLabels() {
+            const show = document.getElementById("showLabelsToggle").checked;
+            saveToStorage('scatter_showLabels', show);
+            updateChart();
+        }
+
+        (function initThemeAndData() {
+            const savedTheme = localStorage.getItem('theme');
+            const savedBg = localStorage.getItem('scatter_bg') || (savedTheme === 'dark' ? '#2b2d42' : '#f8f9fa');
+            changeBgColor(savedBg);
+
+            const savedShowLabels = loadFromStorage('scatter_showLabels') === true;
+            document.getElementById("showLabelsToggle").checked = savedShowLabels;
+
+            const saved = loadFromStorage('scatter');
+            if (saved) {
+                if (saved.xValues && saved.yValues) {
+                    const xInputs = xContainer.querySelectorAll(".data-input");
+                    const yInputs = yContainer.querySelectorAll(".data-input");
+                    saved.xValues.forEach((v, i) => {
+                        if (i < xInputs.length) xInputs[i].value = v;
+                    });
+                    saved.yValues.forEach((v, i) => {
+                        if (i < yInputs.length) yInputs[i].value = v;
+                    });
+                }
+                if (saved.xTitle) document.getElementById("xTitleInput").value = saved.xTitle;
+                if (saved.yTitle) document.getElementById("yTitleInput").value = saved.yTitle;
+            }
+
+            updateChart();
+        })();
+    </script>
+
+    <!-- Bottom Navigation Mobile -->
+    <nav class="bottom-nav">
+        <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
+        <a href="scatter.html" class="bnav-item active" title="Scatter">📈<span>Scatter</span></a>
+        <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
+        <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
+        <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+    </nav>
+    <script src="/js/chatbot.js" defer></script>
+</body>
+
+</html>
