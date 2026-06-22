@@ -24,9 +24,7 @@ if (!apiKey) {
 
 // Initialize Google Gemini AI SDK
 const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
-  systemInstruction: `Anda adalah asisten ahli Quality Control (QCC), 5R/5S, dan manufaktur spesialis QCC Web Simulation System. Tugas utama Anda adalah membantu pengguna memahami cara menggunakan platform pelatihan QCC ini, membaca hasil grafik, dan menafsirkan kesimpulan analisis otomatis (Auto-Conclusion) dengan tepat.
+const SYSTEM_INSTRUCTION = `Anda adalah asisten ahli Quality Control (QCC), 5R/5S, dan manufaktur spesialis QCC Web Simulation System. Tugas utama Anda adalah membantu pengguna memahami cara menggunakan platform pelatihan QCC ini, membaca hasil grafik, dan menafsirkan kesimpulan analisis otomatis (Auto-Conclusion) dengan tepat.
 
 Berikut adalah panduan lengkap fitur website, navigasi DOM, logika data, dan mekanisme analisis yang wajib Anda kuasai untuk membantu pengguna:
 
@@ -161,9 +159,33 @@ Jika user bertanya tentang 8 step problem solving atau meeting QCC, pandu mereka
 - Step 8 (Standardisasi): Buat instruksi kerja (SOP) baru agar masalah tidak terulang, dan lakukan Yokoten (sebarluaskan) ke divisi lain.
 - Step 9 (Refleksi): Review keseluruhan aktivitas, catat apa yang baik, yang kurang, dan rencana untuk sisa masalah.
 
-### 6. BOT PERSONA & GAYA KOMUNIKASI
-Gaya bicara Anda harus menggunakan bahasa Indonesia sehari-hari yang non-formal (menggunakan kata 'gue' dan 'lu' jika perlu). Anda wajib menjawab dengan sangat to-the-point, tanpa basa-basi, langsung ke inti solusi, layaknya seorang engineer pabrik yang praktis.`
-});
+### 6. PANDUAN KAHOOT (INTERAKTIF & EVALUASI QCC)
+Jika user bertanya tentang Kahoot, jelaskan dengan detail materi berikut:
+- **Pengertian & Konsep Dasar**: Kahoot adalah platform pembelajaran berbasis game (game-based learning) untuk membuat kuis, survei, dan evaluasi pembelajaran secara online. Dalam siklus 8 Langkah QCC, Kahoot sangat efektif digunakan pada Step 7 (Evaluasi) atau Step 8 (Standardisasi) untuk menguji apakah seluruh anggota tim dan operator lantai produksi sudah memahami SOP baru atau materi 7 QC Tools secara real-time via smartphone di halaman kahoot.it.
+- **Manfaat Utama di Genba**:
+  1. Meningkatkan keterlibatan & interaksi tim saat briefing pagi (Asakai).
+  2. Evaluasi pemahaman SOP secara instan (Team Leader langsung tahu bagian mana yang belum dikuasai).
+  3. Menumbuhkan kompetisi sehat (gamifikasi) antar operator.
+  4. Menyimpan data hasil kuis (ekspor ke Excel) untuk melacak kemajuan kompetensi tim secara berkelanjutan.
+- **Peran Pemain**:
+  1. **Host (Team Leader / Fasilitator)**: Membuat kuis, menyisipkan materi 7 QC Tools, membagikan PIN Game, mengontrol alur kuis dari layar utama, dan mengunduh laporan nilai.
+  2. **Peserta (Anggota / Operator)**: Mengakses kahoot.it di HP, memasukkan PIN Game, menginput nama panggilan/ID karyawan, dan menjawab pertanyaan.
+- **Langkah Pembuatan Kuis (Langkah 1-11)**:
+  1. Akses portal: Buka https://kahoot.com, klik Sign Up, dan buat akun Professional/Teacher.
+  2. Login & Editor: Klik Log In, klik tombol Create -> New Kahoot.
+  3. Detail Kuis: Masukkan Judul (misal: "Evaluasi Pemahaman Dasar 7 Tools"), deskripsi, dan cover image.
+  4. Susun Soal: Klik Add Question, pilih jenis Quiz atau True or False. Tulis pertanyaan (misal: "Alat QC mana yang paling cocok untuk mencari akar masalah?"), isi 4 opsi jawaban, dan centang jawaban yang benar. Set batas waktu (contoh: 20 detik). Sisipkan gambar cacat part visual atau video YouTube pendukung. Klik Save jika sudah selesai.
+- **Langkah Pelaksanaan Live Game (Langkah 12-15)**:
+  1. Play & Teach: Buka kuis, klik Play -> Teach (Mode Live). PIN Game raksasa akan muncul di layar.
+  2. Join: Operator masuk ke kahoot.it di HP, ketik PIN, ketik nama/ID karyawan.
+  3. Start: Klik Start ketika semua orang sudah gabung.
+  4. Analisis Hasil: Setelah game selesai, unduh rekap otomatis. Area materi yang paling banyak dijawab salah merupakan area yang harus dilatih kembali pada briefing berikutnya.
+
+### 7. BOT PERSONA & GAYA KOMUNIKASI
+Gaya bicara Anda harus menggunakan bahasa Indonesia sehari-hari yang non-formal (menggunakan kata 'gue' dan 'lu' jika perlu). Anda wajib menjawab dengan sangat to-the-point, tanpa basa-basi, langsung ke inti solusi, layaknya seorang engineer pabrik yang praktis.`;
+
+// Helper sleep function for retry backoff
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // In-memory store for chat sessions to isolate history (safe from prototype pollution)
 const chatSessions = Object.create(null);
@@ -199,22 +221,71 @@ app.post('/api/chat', async (req, res) => {
     // Initialize session or update access time
     if (!chatSessions[sId]) {
       chatSessions[sId] = {
-        chat: model.startChat({ history: [] }),
+        history: [],
         lastAccessed: Date.now()
       };
     } else {
       chatSessions[sId].lastAccessed = Date.now();
     }
 
-    // Send user message and get response through the session
-    const result = await chatSessions[sId].chat.sendMessage(message);
-    const response = await result.response;
-    const text = response.text();
+    const session = chatSessions[sId];
+    const modelsToTry = ['gemini-3.5-flash', 'gemini-2.5-flash'];
+    let lastError = null;
+    let responseText = null;
 
-    res.json({ response: text });
+    for (const modelName of modelsToTry) {
+      let attempts = 0;
+      const maxAttempts = 2; // Retry up to 2 times per model on 503/429 errors
+
+      while (attempts < maxAttempts) {
+        attempts++;
+        try {
+          console.log(`[Chat Session ${sId}] Attempting model ${modelName} (Attempt ${attempts}/${maxAttempts})...`);
+          
+          const modelInstance = genAI.getGenerativeModel({
+            model: modelName,
+            systemInstruction: SYSTEM_INSTRUCTION
+          });
+
+          const chat = modelInstance.startChat({
+            history: session.history
+          });
+
+          const result = await chat.sendMessage(message);
+          const response = await result.response;
+          responseText = response.text();
+
+          // Update history in-memory session on success
+          session.history = await chat.getHistory();
+          console.log(`[Chat Session ${sId}] Success with model ${modelName}`);
+          break; // Break the retry loop for this model
+        } catch (error) {
+          lastError = error;
+          console.warn(`[Chat Session ${sId}] Failed with model ${modelName} (Attempt ${attempts}/${maxAttempts}):`, error.message || error);
+          
+          if (attempts < maxAttempts) {
+            const delay = attempts * 1000; // Wait 1s, then 2s
+            console.log(`Waiting ${delay}ms before retrying...`);
+            await sleep(delay);
+          }
+        }
+      }
+      
+      // If we got a response successfully, stop trying other models
+      if (responseText !== null) {
+        break;
+      }
+      console.log(`[Chat Session ${sId}] Model ${modelName} exhausted. Moving to next model...`);
+    }
+
+    if (responseText === null) {
+      throw lastError || new Error('All generative models failed to respond.');
+    }
+
+    res.json({ response: responseText });
   } catch (error) {
     // Log actual error on server side for debugging
-    console.error('Gemini API Error:', error);
+    console.error('Gemini API Error after retries and fallbacks:', error);
     // Return a generic, safe 500 error to prevent system detail leakage
     res.status(500).json({ error: 'Gagal berkomunikasi dengan AI. Silakan coba beberapa saat lagi.' });
   }
@@ -226,15 +297,10 @@ app.get('*', (req, res) => {
 });
 
 // Start the server
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`========================================`);
-    console.log(`🚀 QCC Server is running on http://localhost:${PORT}`);
-    console.log(`💡 Serving static frontend from 'public/' directory`);
-    console.log(`🤖 Google Gemini integration initialized`);
-    console.log(`========================================`);
-  });
-}
-
-// WAJIB tambahkan ini di paling bawah:
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`===================================================`);
+  console.log(`🚀 QCC Server is running on http://localhost:${PORT}`);
+  console.log(`💡 Serving static frontend from 'public/' directory`);
+  console.log(`🤖 Google Gemini integration initialized`);
+  console.log(`===================================================`);
+});

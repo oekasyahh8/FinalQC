@@ -32,37 +32,46 @@ input, button, select, textarea {
 }
 
 .qcc-header .header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: var(--font-size-xl);
     font-weight: 600;
-    flex: 2;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    pointer-events: none;
 }
 
 .qcc-header .live-time {
     position: static;
-    flex: 1;
-    display: flex;
+    display: inline-flex;
     justify-content: flex-start;
     align-items: center;
-    font-size: var(--font-size-xs);
+    
+    font-size: 13px;
+    font-weight: 500;
+    color: #ffffff;
     background: rgba(255, 255, 255, 0.15);
-    padding: var(--space-xs) var(--space-md);
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    gap: 5px;
-    width: max-content;
+    padding: 6px 16px;
+    border-radius: 25px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    gap: 6px;
+    
+    width: auto;
+    max-width: max-content;
+    white-space: nowrap;
 }
 
 .qcc-header .header-controls {
     position: static;
-    flex: 1;
     display: flex;
     justify-content: flex-end;
     gap: var(--space-md);
     align-items: center;
+    margin-left: auto;
 }
 
 /* ===== HEADER BUTTONS ===== */

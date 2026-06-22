@@ -767,22 +767,11 @@
 
     // ===== THEME & DROPDOWN =====
     function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      document.getElementById('themeBtn').innerHTML = isDark ? "☀️" : "🌙";
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      QCC.toggleTheme();
     }
 
     (function initTheme() {
-      const savedTheme = localStorage.getItem('theme');
-      const isDark = savedTheme === 'dark';
-      if (isDark) {
-        document.body.classList.add('dark-mode');
-        document.getElementById('themeBtn').innerHTML = "☀️";
-      } else {
-        document.body.classList.remove('dark-mode');
-        document.getElementById('themeBtn').innerHTML = "🌙";
-      }
+      QCC.initGlobalTheme();
     })();
 
     function toggleDropdown(e) { e.stopPropagation(); document.getElementById("guideDropdown").classList.toggle("show"); }

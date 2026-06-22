@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../css/design-tokens.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/layouts.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
     <style>
@@ -170,23 +171,6 @@
                     Data</label>
             </div>
 
-            <div class="color-picker-container" id="color-picker">
-                <p>Tema Latar:</p>
-                <div class="color-options">
-                    <div class="color-circle" style="background: #f8f9fa;" onclick="changeBgColor('#f8f9fa')"
-                        title="Terang"></div>
-                    <div class="color-circle" style="background: #2b2d42;" onclick="changeBgColor('#2b2d42')"
-                        title="Gelap Malam"></div>
-                    <div class="color-circle" style="background: #e0fbfc;" onclick="changeBgColor('#e0fbfc')"
-                        title="Biru Es"></div>
-                    <div class="color-circle" style="background: #d8f3dc;" onclick="changeBgColor('#d8f3dc')"
-                        title="Hijau Mint"></div>
-                    <div class="color-circle" style="background: #ffe5d9;" onclick="changeBgColor('#ffe5d9')"
-                        title="Peach Soft"></div>
-                    <div class="color-circle" style="background: #7b2cbf;" onclick="changeBgColor('#7b2cbf')"
-                        title="Ungu Elegan"></div>
-                </div>
-            </div>
 
             <div class="qcc-info-box" id="qccInfoBox" onclick="this.classList.toggle('active')">
                 <div class="qcc-info-header">📖 Fungsi Chart Ini</div>
@@ -530,6 +514,7 @@
             },
             plugins: [customCanvasBackgroundColor]
         });
+        QCC.activeChart = scatterChart;
 
         // --- FUNGSI ANIMASI MENGAPUNG (FLOATING) ---
         function startFloatingEffect() {
@@ -835,10 +820,6 @@
             box.style.display = "block";
         }
 
-        function changeBgColor(colorHex) {
-            QCC.changeBgColor(colorHex, scatterChart, 'scatter_bg');
-        }
-
         function applyCurrentThemeToConclusion() {
             let isDark = document.body.classList.contains('dark-mode');
             let highlights = document.querySelectorAll('.conclusion-box b.highlight');
@@ -849,7 +830,7 @@
         }
 
         function toggleTheme() {
-            QCC.toggleTheme(scatterChart, 'scatter_bg');
+            QCC.toggleTheme();
         }
 
         function randomizeData() {
@@ -882,9 +863,7 @@
         }
 
         (function initThemeAndData() {
-            const savedTheme = localStorage.getItem('theme');
-            const savedBg = localStorage.getItem('scatter_bg') || (savedTheme === 'dark' ? '#2b2d42' : '#f8f9fa');
-            changeBgColor(savedBg);
+            QCC.initGlobalTheme();
 
             const savedShowLabels = loadFromStorage('scatter_showLabels') === true;
             document.getElementById("showLabelsToggle").checked = savedShowLabels;
@@ -911,11 +890,11 @@
 
     <!-- Bottom Navigation Mobile -->
     <nav class="bottom-nav">
-        <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
-        <a href="scatter.html" class="bnav-item active" title="Scatter">📈<span>Scatter</span></a>
-        <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
-        <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
-        <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+        <a href="../index.html" class="bnav-item" title="Home"><i class="bi bi-house-door"></i><span>Home</span></a>
+        <a href="scatter.html" class="bnav-item active" title="Scatter"><i class="bi bi-graph-up"></i><span>Scatter</span></a>
+        <a href="histogram.html" class="bnav-item" title="Histogram"><i class="bi bi-bar-chart-line"></i><span>Histogram</span></a>
+        <a href="control-chart.html" class="bnav-item" title="Control"><i class="bi bi-activity"></i><span>Control</span></a>
+        <a href="pareto.html" class="bnav-item" title="Pareto"><i class="bi bi-clipboard-data"></i><span>Pareto</span></a>
     </nav>
     <script src="/js/chatbot.js" defer></script>
 </body>

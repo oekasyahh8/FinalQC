@@ -158,52 +158,72 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// --- Dark Mode via Color Picker ---
-QCC.changeBgColor = function(colorHex, chartInstance, storageKey) {
-    document.body.style.backgroundColor = colorHex;
-    const isDark = (colorHex === '#2b2d42' || colorHex === '#7b2cbf');
+// --- Global Theme System ---
+QCC.activeChart = null;
+QCC.pageThemeCallback = null;
 
+QCC.setTheme = function(theme) {
+    const isDark = (theme === 'dark');
     if (isDark) {
         document.body.classList.add('dark-mode');
     } else {
         document.body.classList.remove('dark-mode');
     }
 
+    // Reset background color override from previous color picker
+    document.body.style.backgroundColor = '';
+
     const themeBtn = document.getElementById('themeBtn');
     if (themeBtn) {
         themeBtn.innerHTML = isDark ? "☀️" : "🌙";
     }
 
-    if (chartInstance) {
-        applyDarkModeToChart(chartInstance, isDark);
+    if (QCC.activeChart) {
+        applyDarkModeToChart(QCC.activeChart, isDark);
     }
 
-    // Update active state of color options
-    document.querySelectorAll('.color-circle').forEach(circle => {
-        if (circle.getAttribute('style').includes(colorHex)) {
-            circle.classList.add('active');
-        } else {
-            circle.classList.remove('active');
-        }
-    });
-
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    if (storageKey) {
-        localStorage.setItem(storageKey, colorHex);
+    if (typeof QCC.pageThemeCallback === 'function') {
+        QCC.pageThemeCallback(isDark);
     }
 
     // Run callback to apply theme changes to page specific boxes (like conclusion boxes)
     if (typeof applyCurrentThemeToConclusion === 'function') {
         applyCurrentThemeToConclusion();
     }
-}
 
-// --- Toggle Theme Global Helper ---
-QCC.toggleTheme = function(chartInstance, storageKey) {
+    localStorage.setItem('theme', theme);
+};
+
+QCC.toggleTheme = function() {
     const isDark = document.body.classList.contains('dark-mode');
-    const newColor = isDark ? '#f8f9fa' : '#2b2d42';
-    QCC.changeBgColor(newColor, chartInstance, storageKey);
-}
+    const newTheme = isDark ? 'light' : 'dark';
+    QCC.setTheme(newTheme);
+};
+
+QCC.initGlobalTheme = function(pageThemeCallback) {
+    if (typeof pageThemeCallback === 'function') {
+        QCC.pageThemeCallback = pageThemeCallback;
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    QCC.setTheme(savedTheme);
+
+    // Sync across open pages/tabs in real-time
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+            QCC.setTheme(e.newValue || 'light');
+        }
+    });
+};
+
+// Backward-compatibility wrapper for any legacy calls
+QCC.changeBgColor = function(colorHex, chartInstance, storageKey) {
+    if (chartInstance) {
+        QCC.activeChart = chartInstance;
+    }
+    const isDark = (colorHex === '#2b2d42' || colorHex === '#7b2cbf');
+    QCC.setTheme(isDark ? 'dark' : 'light');
+};
 
 // --- Scroll to Input Global Helper ---
 function scrollToInput() {

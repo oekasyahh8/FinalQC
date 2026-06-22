@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../css/design-tokens.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/layouts.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script src="../js/utils.js"></script>
 
@@ -1139,105 +1140,59 @@
         }
 
         /* ==============================================================
-           TOP TAB SYSTEM STYLING
+           PDF VIEWER STYLING
            ============================================================== */
-        .top-tab-container {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 8px;
-            border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-        }
-
-        .top-tab-btn {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: transparent;
-            border: none;
-            padding: 14px 24px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .top-tab-btn:hover {
-            color: var(--primary);
-            background: rgba(37, 127, 168, 0.06);
-        }
-
-        .top-tab-btn.active {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 12px rgba(37, 127, 168, 0.3);
-        }
-
-        /* Tab panes */
-        .main-tab-pane {
-            display: none;
-            animation: fadeInTab 0.4s ease;
-        }
-
-        .main-tab-pane.active {
-            display: block;
-        }
-
-        @keyframes fadeInTab {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Tab 2 (PDF Viewer Area) */
         .pdf-viewer-container {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            animation: fadeInTab 0.4s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark-mode .pdf-viewer-container {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
 
         .pdf-header-info {
+            padding: 20px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 2px dashed var(--card-border);
-            padding-bottom: 16px;
-            margin-bottom: 5px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 16px;
+        }
+
+        .dark-mode .pdf-header-info {
+            background: #0f172a;
+            border-bottom-color: #334155;
         }
 
         .pdf-title-area h2 {
-            font-size: 24px;
-            color: var(--primary);
-            font-weight: 700;
-            margin: 0 0 6px 0;
+            margin: 0 0 4px 0;
+            font-size: 1.25rem;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .dark-mode .pdf-title-area h2 {
+            color: #f8fafc;
         }
 
         .pdf-title-area p {
-            font-size: 14px;
-            color: var(--text-muted);
             margin: 0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .dark-mode .pdf-title-area p {
+            color: #94a3b8;
         }
 
         .pdf-action-buttons {
@@ -1246,108 +1201,85 @@
         }
 
         .pdf-btn {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
+            justify-content: center;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
             border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
             text-decoration: none;
             transition: all 0.2s ease;
-            border: none;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
 
         .pdf-btn-open {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(37, 127, 168, 0.2);
+            background-color: #ffffff;
+            color: #3b82f6;
+            border: 1px solid #bfdbfe;
         }
 
         .pdf-btn-open:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(37, 127, 168, 0.35);
+            background-color: #eff6ff;
+            border-color: #93c5fd;
+        }
+
+        .dark-mode .pdf-btn-open {
+            background-color: #1e293b;
+            color: #60a5fa;
+            border-color: #3b82f6;
+        }
+
+        .dark-mode .pdf-btn-open:hover {
+            background-color: #0f172a;
         }
 
         .pdf-btn-download {
-            background: var(--success);
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(46, 196, 182, 0.2);
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: 1px solid transparent;
         }
 
         .pdf-btn-download:hover {
-            background: #239e92;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(46, 196, 182, 0.35);
+            background-color: #2563eb;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .dark-mode .pdf-btn-download {
+            background-color: #2563eb;
+        }
+
+        .dark-mode .pdf-btn-download:hover {
+            background-color: #1d4ed8;
         }
 
         .pdf-iframe-wrapper {
-            position: relative;
+            background: #e2e8f0;
             width: 100%;
-            border-radius: 12px;
-            border: 1px solid var(--card-border);
-            overflow: hidden;
-            background: #f1f5f9;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: center;
         }
 
-        .pdf-iframe-wrapper iframe {
-            border: none;
-            display: block;
-        }
-
-        /* Dark mode adjustment for iframe wrapper background */
-        body.dark-mode .pdf-iframe-wrapper {
-            background: #1e293b;
+        .dark-mode .pdf-iframe-wrapper {
+            background: #334155;
         }
 
         @media screen and (max-width: 600px) {
-            .top-tab-container {
-                gap: 6px;
-                padding: 6px;
-                border-radius: 10px;
-                margin-bottom: 12px;
+            .pdf-header-info {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
             }
-
-            .top-tab-btn {
-                padding: 10px 12px;
-                font-size: 13px;
-                border-radius: 8px;
-                gap: 4px;
-            }
-
-            .pdf-viewer-container {
-                padding: 15px;
-                gap: 12px;
-            }
-
-            .pdf-title-area h2 {
-                font-size: 18px;
-            }
-
-            .pdf-title-area p {
-                font-size: 12px;
-            }
-
             .pdf-action-buttons {
                 width: 100%;
                 flex-direction: column;
-                gap: 8px;
             }
-
             .pdf-btn {
                 width: 100%;
-                justify-content: center;
-                padding: 10px;
-                font-size: 13px;
-            }
-
-            .pdf-iframe-wrapper iframe {
-                height: 500px !important;
             }
         }
-    </style>
+        </style>
 </head>
 
 <body class="body-modul">
@@ -1382,17 +1314,7 @@
             </div>
         </header>
 
-        <div class="top-tab-container">
-            <button class="top-tab-btn active" onclick="switchMainTab('tab-qc-tools', this)">
-                🛠️ 7 QC Tools
-            </button>
-            <button class="top-tab-btn" onclick="switchMainTab('tab-8-steps', this)">
-                📋 8 Steps Meetings
-            </button>
-        </div>
-
-        <!-- Tab 1: 7 QC Tools -->
-        <div id="tab-qc-tools" class="main-tab-pane active">
+        <!-- Modul Content -->
             <div class="container">
                 <div class="sidebar">
                     <button class="nav-btn active" onclick="openModule('dasar')">
@@ -1426,6 +1348,14 @@
                     <button class="nav-btn" onclick="openModule('stratifikasi')">
                         <span class="desktop-text">🗂️ Stratifikasi</span>
                         <span class="mobile-text">🗂️ Stratifikasi</span>
+                    </button>
+                <button class="nav-btn" onclick="openModule('kahoot')">
+                        <span class="desktop-text">🎮 Kahoot QCC</span>
+                        <span class="mobile-text">🎮 Kahoot</span>
+                    </button>
+                <button class="nav-btn" onclick="openModule('8-steps')">
+                        <span class="desktop-text">📋 8 Steps Meetings</span>
+                        <span class="mobile-text">📋 8 Steps</span>
                     </button>
                 </div>
 
@@ -2749,43 +2679,140 @@
                             </div>
                             <button class="slide-btn" onclick="changeSlide('stratifikasi', 1)">Selanjutnya ➡️</button>
                         </div>
-                    </div>
+                    </div> <!-- end stratifikasi module-section -->
 
-                </div>
-            </div>
-
-            <!-- Tab 2: 8 Steps Meetings -->
-            <div id="tab-8-steps" class="main-tab-pane">
-                <div class="pdf-viewer-container">
-                    <div class="pdf-header-info">
-                        <div class="pdf-title-area">
-                            <h2>📋 Panduan 8 Langkah QCC (G-QCC)</h2>
-                            <p>Materi Pelatihan Standardisasi QC Circle Problem Solving</p>
-                        </div>
-                        <div class="pdf-action-buttons">
-                            <a href="/assets/img/8step.pdf" target="_blank" class="pdf-btn pdf-btn-open">
-                                <span>🔓 Buka di Tab Baru</span>
-                            </a>
-                            <a href="/assets/img/8step.pdf" download class="pdf-btn pdf-btn-download">
-                                <span>📥 Download Modul</span>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="pdf-iframe-wrapper">
-                        <object id="pdfViewer" data-src="/assets/img/8step.pdf" type="application/pdf" width="100%"
-                            style="height: 85vh; min-height: 800px; border: none;">
-                            <div style="padding: 20px; text-align: center; background: #fff;">
-                                <p style="margin-bottom: 10px;">Browser Anda tidak mendukung preview PDF secara
-                                    langsung.</p>
-                                <a href="/assets/img/8step.pdf" target="_blank"
-                                    style="color: var(--primary); text-decoration: underline; font-weight: bold;">Download
-                                    PDF di sini</a>
+                    <!-- Modul 8-Steps (Moved inside content-area) -->
+                    <div id="8-steps" class="module-section">
+                        <div class="pdf-viewer-container">
+                            <div class="pdf-header-info">
+                                <div class="pdf-title-area">
+                                    <h2>📋 Panduan 8 Langkah QCC (G-QCC)</h2>
+                                    <p>Materi Pelatihan Standardisasi QC Circle Problem Solving</p>
+                                </div>
+                                <div class="pdf-action-buttons">
+                                    <a href="/assets/img/8step.pdf" target="_blank" class="pdf-btn pdf-btn-open">
+                                        <span>🔓 Buka di Tab Baru</span>
+                                    </a>
+                                    <a href="/assets/img/8step.pdf" download class="pdf-btn pdf-btn-download">
+                                        <span>📥 Download Modul</span>
+                                    </a>
+                                </div>
                             </div>
-                        </object>
+                            <div id="pdf-iframe-wrapper" class="pdf-iframe-wrapper" data-pdf-url="/assets/img/8step.pdf">
+                                <!-- PDF Object will be injected here dynamically by JS to prevent rendering bugs -->
+                            </div>
+                        </div>
+                    </div> <!-- end 8-steps module-section -->
+
+                    <!-- Modul Kahoot -->
+                    <div id="kahoot" class="module-section">
+                        <h2 class="mod-title">Materi Pembelajaran Kahoot Game</h2>
+                        
+                        <div class="slide-container" id="slide-kahoot">
+                            <div class="slide active-slide" id="slide-kahoot-0">
+                                <div class="theory-content">
+                                    <h3>💡 Slide 1: Konsep Dasar Kahoot QCC</h3>
+                                    
+                                    <div class="info-box detail-card">
+                                        <h4>🔍 Apa itu <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a> QCC?</h4>
+                                        <p><b><a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a></b> adalah platform pembelajaran berbasis permainan (<i>game-based learning</i>) yang digunakan untuk membuat kuis interaktif, survei, dan evaluasi pembelajaran secara online.<br><br>
+                                            Dalam siklus <b>8 Langkah QCC</b>, khususnya pada <b>Step 7 (Evaluasi)</b> atau <b>Step 8 (Standardisasi)</b>, <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a> sangat efektif untuk menguji apakah seluruh anggota tim dan operator lantai produksi sudah memahami SOP baru atau materi <b>7 QC Tools</b>. Anggota tim dapat menjawab pertanyaan kuis secara <i>real-time</i> menggunakan smartphone mereka melalui halaman <code><a href="https://kahoot.it/" target="_blank" style="color: #2563eb; text-decoration: underline;">kahoot.it</a></code>.
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="info-box success detail-card">
+                                        <h4>🎯 Manfaat Utama & Tindakan Genba</h4>
+                                        <p>• <b>Meningkatkan Keterlibatan</b>: Membuat briefing pagi (Asakai) menjadi interaktif dan dinamis, bukan sekadar mendengarkan instruksi satu arah.<br>
+                                            • <b>Evaluasi Pemahaman Instan</b>: Team Leader (TL) langsung mengetahui secara instan bagian mana dari SOP atau QC Tools yang belum dikuasai oleh operator.<br>
+                                            • <b>Gamifikasi Positif</b>: Menumbuhkan kompetisi sehat antar operator pabrik dalam pemahaman mutu.<br>
+                                            • <b>Data Evaluasi Real-Time</b>: Hasil kuis dapat diunduh dalam format Excel untuk pemetaan kompetensi berkelanjutan.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide" id="slide-kahoot-1">
+                                <div class="theory-content">
+                                    <h3>👥 Slide 2: Peran dalam <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a> & Langkah Awal</h3>
+                                    <p class="sim-instruction" style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">Panduan awal peran pemain dan inisiasi kuis baru di Editor <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a>:</p>
+                                    
+                                    <div class="table-scroll-wrapper" style="background: var(--sim-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 20px; margin-bottom: 15px; overflow-x: auto;">
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;">
+                                            <thead>
+                                                <tr style="background: rgba(37, 127, 168, 0.08); text-align: center;">
+                                                    <th style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold; width: 40%;">Peran Pemain</th>
+                                                    <th style="padding: 10px; border: 1px solid var(--card-border); color: var(--primary); font-weight: bold; width: 60%;">Tanggung Jawab & Aktivitas di QCC</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600;">👑 Host (TL / Fasilitator)</td>
+                                                    <td style="padding: 10px; border: 1px solid var(--card-border);">Membuat kuis, menyisipkan materi 7 QC Tools, mengontrol jalannya permainan, membagikan PIN, dan mengunduh data rekap nilai pemahaman tim.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 10px; border: 1px solid var(--card-border); font-weight: 600;">📱 Peserta (Anggota / Operator)</td>
+                                                    <td style="padding: 10px; border: 1px solid var(--card-border);">Masuk ke browser melalui <code><a href="https://kahoot.it/" target="_blank" style="color: #2563eb; text-decoration: underline;">kahoot.it</a></code>, menginput PIN Game, menulis nama/ID karyawan, dan menjawab pertanyaan kuis secara real-time.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="info-box warning detail-card" style="margin-top: 15px;">
+                                        <h4>📝 Tahapan Membuat Akun & Kuis Baru</h4>
+                                        <p>
+                                            <b>1. Akses Portal:</b> Buka <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;"><code>https://kahoot.com</code></a>, klik <i>Sign Up</i>, pilih tipe akun Professional/Teacher.<br>
+                                            <b>2. Login & Editor:</b> Klik <i>Log In</i>, lalu pada Dashboard utama, klik tombol <b>Create</b> -> pilih <b>New <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a></b>.<br>
+                                            <b>3. Lengkapi Meta Kuis:</b> Masukkan Judul (misal: "Evaluasi Pemahaman Dasar 7 Tools"), Deskripsi kuis, dan cover image yang representatif agar menarik minat belajar operator.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="slide" id="slide-kahoot-2">
+                                <div class="theory-content">
+                                    <h3>⚙️ Slide 3: Langkah Pengisian & Pelaksanaan</h3>
+                                    
+                                    <div class="info-box detail-card">
+                                        <h4>🛠️ Tahap Menyusun Soal (Langkah 6-11)</h4>
+                                        <p>
+                                            • <b>Add Question:</b> Klik tombol <i>Add Question</i> di editor <a href="https://kahoot.com/" target="_blank" style="color: #2563eb; text-decoration: underline;">Kahoot</a>, pilih tipe <i>Quiz</i> (pilihan ganda) atau <i>True or False</i>.<br>
+                                            • <b>Tulis Soal & Opsi:</b> Tulis pertanyaan (misal: "Alat QC mana yang paling cocok untuk mencari akar masalah?"), masukkan opsi jawaban, dan centang lingkaran di samping jawaban yang benar.<br>
+                                            • <b>Atur Batas Waktu & Media:</b> Set waktu (contoh: 20 detik) dan sisipkan gambar cacat part visual atau video YouTube dari Genba untuk memperjelas konteks studi kasus.<br>
+                                            • <b>Simpan:</b> Setelah selesai menyusun seluruh soal evaluasi, klik tombol <b>Save</b> di pojok kanan atas.
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="info-box success detail-card">
+                                        <h4>🚀 Tahap Menjalankan Live Game (Langkah 12-15)</h4>
+                                        <p>
+                                            • <b>Play & Teach:</b> Buka kuis yang telah disimpan, klik <b>Play</b> -> pilih <b>Teach</b> (Mode Live). Layar proyektor utama akan memunculkan <b>PIN Game</b> raksasa.<br>
+                                            • <b>Join & Start:</b> Instruksikan seluruh operator membuka <code><a href="https://kahoot.it/" target="_blank" style="color: #2563eb; text-decoration: underline;">kahoot.it</a></code> di HP masing-masing, ketik PIN Game, masukkan nama panggilan. Klik <b>Start</b> setelah semua anggota bergabung.<br>
+                                            • <b>Review Hasil:</b> Setelah kuis berakhir, Host akan mendapatkan rekap otomatis. Area materi dengan tingkat jawaban salah tertinggi mengindikasikan materi pelatihan yang wajib diulang pada sesi briefing berikutnya.
+                                        </p>
+                                    </div>
+
+                                    <div class="action-btns" style="margin-top: 25px;">
+                                        <a href="../index.html" class="btn-navigate">🏠 Kembali ke Dashboard Utama</a>
+                                        <button class="export-btn" onclick="exportToPDFNative('kahoot', 'Modul_Kahoot')">📄 Download Modul Bab Ini (PDF)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slide-controls">
+                            <button class="slide-btn" onclick="changeSlide('kahoot', -1)">⬅️ Sebelumnya</button>
+                            <div class="slide-dots" id="dots-kahoot">
+                                <div class="dot active" onclick="goToSlide('kahoot', 0)"></div>
+                                <div class="dot" onclick="goToSlide('kahoot', 1)"></div>
+                                <div class="dot" onclick="goToSlide('kahoot', 2)"></div>
+                            </div>
+                            <button class="slide-btn" onclick="changeSlide('kahoot', 1)">Selanjutnya ➡️</button>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </div>
+
+                </div> <!-- end content-area -->
+            </div> <!-- end container -->
+        </div> <!-- end main-app-container -->
 
         <script>
             // ----------------------------------------------------
@@ -2797,74 +2824,51 @@
             Chart.defaults.plugins.legend.display = false;
 
             function toggleTheme() {
-                const body = document.body;
-                body.classList.toggle('dark-mode');
-                const isDark = body.classList.contains('dark-mode');
-                const themeBtn = document.getElementById('themeBtn');
-                if (themeBtn) themeBtn.innerText = isDark ? '☀️' : '🌙';
-
-                Chart.defaults.color = isDark ? "#cbd5e1" : "#4b5563";
-                const gridColor = isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
-                const textColor = isDark ? "#cbd5e1" : "#4b5563";
-
-                [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
-                    if (chart) {
-                        if (chart.options.scales) {
-                            Object.keys(chart.options.scales).forEach(scaleKey => {
-                                let scale = chart.options.scales[scaleKey];
-                                if (!scale.grid) scale.grid = {};
-                                scale.grid.color = gridColor;
-                                if (!scale.ticks) scale.ticks = {};
-                                scale.ticks.color = textColor;
-                            });
-                        }
-                        if (chart === simPareto) {
-                            chart.data.datasets[1].backgroundColor = isDark ? '#89CFF0' : '#257fa8';
-                            chart.data.datasets[0].borderColor = isDark ? '#f87171' : '#ef233c';
-                            chart.data.datasets[0].backgroundColor = isDark ? '#f87171' : '#ef233c';
-                        }
-                        chart.update('none');
-                    }
-                });
-
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            }
-
-            function switchMainTab(tabId, btn) {
-                document.querySelectorAll('.main-tab-pane').forEach(el => {
-                    el.classList.remove('active');
-                });
-                document.querySelectorAll('.top-tab-btn').forEach(el => {
-                    el.classList.remove('active');
-                });
-                document.getElementById(tabId).classList.add('active');
-                if (btn) {
-                    btn.classList.add('active');
-                }
-
-                // Lazy load PDF object when switching to 8 steps tab to prevent browser deferred blank render
-                if (tabId === 'tab-8-steps') {
-                    setTimeout(() => {
-                        const pdfViewer = document.getElementById('pdfViewer');
-                        if (pdfViewer && !pdfViewer.hasAttribute('data')) {
-                            pdfViewer.setAttribute('data', pdfViewer.getAttribute('data-src'));
-                        }
-                    }, 100);
-                }
+                QCC.toggleTheme();
             }
 
             function openModule(modId) {
                 document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
                 document.getElementById(modId).classList.add('active');
-                event.currentTarget.classList.add('active');
-                goToSlide(modId, 0);
+                
+                if (event && event.currentTarget && event.currentTarget.classList) {
+                    event.currentTarget.classList.add('active');
+                } else {
+                    const btns = document.querySelectorAll('.nav-btn');
+                    for (let b of btns) {
+                        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(modId)) {
+                            b.classList.add('active');
+                        }
+                    }
+                }
+                
+                if (modId !== '8-steps') {
+                    goToSlide(modId, 0);
+                }
+
+                if (modId === '8-steps') {
+                    setTimeout(() => {
+                        const wrapper = document.getElementById('pdf-iframe-wrapper');
+                        if (wrapper && wrapper.innerHTML.trim() === '<!-- PDF Object will be injected here dynamically by JS to prevent rendering bugs -->') {
+                            const url = wrapper.getAttribute('data-pdf-url');
+                            wrapper.innerHTML = `
+                                <object data="${url}" type="application/pdf" width="100%" style="height: 85vh; min-height: 800px; border: none;">
+                                    <div style="padding: 20px; text-align: center; background: #fff;">
+                                        <p style="margin-bottom: 10px;">Browser Anda tidak mendukung preview PDF secara langsung.</p>
+                                        <a href="${url}" target="_blank" style="color: var(--primary); text-decoration: underline; font-weight: bold;">Download PDF di sini</a>
+                                    </div>
+                                </object>
+                            `;
+                        }
+                    }, 100);
+                }
             }
 
             // ----------------------------------------------------
             // SYSTEM: SLIDE LOGIC
             // ----------------------------------------------------
-            const slideState = { dasar: 0, scatter: 0, histogram: 0, control: 0, pareto: 0, checksheet: 0, fishbone: 0, stratifikasi: 0 };
+            const slideState = { dasar: 0, scatter: 0, histogram: 0, control: 0, pareto: 0, checksheet: 0, fishbone: 0, stratifikasi: 0, kahoot: 0 };
 
             function changeSlide(moduleId, direction) {
                 const slides = document.querySelectorAll(`#slide-${moduleId} .slide`);
@@ -3148,12 +3152,35 @@
                     // Beri waktu 300ms agar CSS warna berubah sebelum sistem mengekstrak
                     await new Promise(r => setTimeout(r, 300));
 
-                    // EKSTRAK TEKS DARI SLIDE DOM (Materi Teori & Tabel)
-                    const teori1_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) h4`).innerHTML;
-                    const teori1_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) p`).innerHTML;
-                    const teori2_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) h4`).innerHTML;
-                    const teori2_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) p`).innerHTML;
-                    const tableHTML = document.querySelector(`#${modId} .table-content`).innerHTML;
+                    let teori1_judul = "", teori1_isi = "", teori2_judul = "", teori2_isi = "", tableHTML = "", kahootHTML = "";
+                    
+                    if (modId === 'kahoot') {
+                        // Gabungkan semua slides teori kahoot
+                        const slide0 = document.querySelector('#slide-kahoot-0 .theory-content').innerHTML;
+                        const slide1 = document.querySelector('#slide-kahoot-1 .theory-content').innerHTML;
+                        const slide2 = document.querySelector('#slide-kahoot-2 .theory-content').innerHTML;
+                        
+                        // Buang tombol download agar tidak tercetak
+                        const cleanSlide0 = slide0.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
+                        const cleanSlide1 = slide1.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
+                        const cleanSlide2 = slide2.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
+
+                        kahootHTML = `
+                            <div style="background: #ffffff; padding: 20px; font-family: sans-serif; line-height: 1.6;">
+                                ${cleanSlide0}
+                                <hr style="margin: 20px 0; border: 0; border-top: 2px dashed #cbd5e1;">
+                                ${cleanSlide1}
+                                <hr style="margin: 20px 0; border: 0; border-top: 2px dashed #cbd5e1;">
+                                ${cleanSlide2}
+                            </div>
+                        `;
+                    } else {
+                        teori1_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) h4`).innerHTML;
+                        teori1_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) p`).innerHTML;
+                        teori2_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) h4`).innerHTML;
+                        teori2_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) p`).innerHTML;
+                        tableHTML = document.querySelector(`#${modId} .table-content`).innerHTML;
+                    }
 
                     // PERSIAPAN PENGAMBILAN FOTO SEMUA CHART SIMULASI
                     if (modId === 'scatter') {
@@ -3234,7 +3261,7 @@
                         }
 
                         Chart.defaults.animation.duration = prevAnim;
-                    } else {
+                    } else if (modId !== 'kahoot') {
                         // For non-chart theoretical tools, Slide 2 is a custom HTML visualization (table or list)
                         // Let's capture the Slide 2 HTML directly!
                         const slide2HTML = document.querySelector(`#slide-${modId} .slide:nth-child(2)`).innerHTML;
@@ -3246,171 +3273,6 @@
                 `;
                     }
 
-                    if (loadingText) loadingText.innerHTML = "Menyusun tata letak halaman PDF...";
-
-                    // Bangun Halaman Sampul Premium
-                    const today = new Date().toLocaleDateString("id-ID", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric"
-                    });
-                    const currentYear = new Date().getFullYear();
-                    const prettyTitle = titleName.replace(/_/g, ' ');
-
-                    const coverHTML = `
-                <div class="print-cover">
-                    <div style="font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Buku Panduan & Pelatihan Digital</div>
-                    <div class="print-cover-decor"></div>
-                    <div class="print-cover-title">Buku Saku QCC Tools</div>
-                    <div class="print-cover-subtitle">Modul: ${prettyTitle}</div>
-                    
-                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                        <span style="font-size: 12px; background: rgba(37, 127, 168, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 600;">Scatter Diagram</span>
-                        <span style="font-size: 12px; background: rgba(46, 196, 182, 0.08); color: #2ec4b6; padding: 6px 14px; border-radius: 20px; font-weight: 600;">Histogram</span>
-                        <span style="font-size: 12px; background: rgba(239, 35, 96, 0.08); color: #ef233c; padding: 6px 14px; border-radius: 20px; font-weight: 600;">Control Chart</span>
-                        <span style="font-size: 12px; background: rgba(37, 127, 168, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: 600;">Pareto Diagram</span>
-                    </div>
-
-                    <div class="print-cover-meta">
-                        Disusun oleh:<br>
-                        <strong>Pak Supri & Tim QC</strong><br><br>
-                        Tanggal Unduh:<br>
-                        <strong>${today}</strong><br>
-                        <span style="font-size: 10px; color: #94a3b8; display: block; margin-top: 20px;">Quality Control Training Dashboard © ${currentYear}</span>
-                    </div>
-                </div>
-                <div style="page-break-after: always;"></div>
-            `;
-
-                    // RAKIT SELURUH BLOK MENJADI SATU KESATUAN HTML KHUSUS CETAK
-                    const finalPrintHTML = `
-                ${coverHTML}
-
-                <div style="margin-bottom: 30px;">
-                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">A. Teori Fundamental</h2>
-                    <div style="margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; page-break-inside: avoid;">
-                        <h4 style="color: var(--primary); margin-bottom: 6px; font-size: 14px;">${teori1_judul}</h4>
-                        <p style="color: #334155; line-height: 1.6; text-align: justify; font-size: 13px;">${teori1_isi}</p>
-                    </div>
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; page-break-inside: avoid;">
-                        <h4 style="color: var(--primary); margin-bottom: 6px; font-size: 14px;">${teori2_judul}</h4>
-                        <p style="color: #334155; line-height: 1.6; text-align: justify; font-size: 13px;">${teori2_isi}</p>
-                    </div>
-                </div>
-
-                <div style="page-break-before: always; padding-top: 10px;">
-                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">B. Kamus Analisis Diagnostik Pola Grafik</h2>
-                    <p style="margin-bottom: 20px; color: #4b5563; font-size: 13px; line-height: 1.6;">
-                        Di bawah ini adalah katalog pola grafik proses produksi yang ditangkap oleh sistem simulasi interaktif, beserta interpretasi diagnostik akar masalah dan rekomendasi penanganannya:
-                    </p>
-                    ${albumHTML}
-                </div>
-
-                <div style="page-break-before: always; padding-top: 10px;">
-                    <h2 style="color: var(--primary); border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 15px; font-size: 18px; text-transform: uppercase;">C. Perbandingan Metode Eksekusi Data</h2>
-                    <p style="margin-bottom: 15px; color: #4b5563; font-size: 13px; line-height: 1.6;">
-                        Tabel berikut memaparkan perbandingan antara metode pembuatan diagram secara konvensional (menggunakan Microsoft Excel) dan metode otomatis melalui Platform Digital QC (sistem web ini):
-                    </p>
-                    <div class="print-table">
-                        ${tableHTML}
-                    </div>
-                </div>
-            `;
-
-                    // Tembakkan HTML tersebut ke wadah cetak yang disiapkan di tag <body>
-                    document.getElementById('print-area').innerHTML = finalPrintHTML;
-
-                    // Matikan loading, beri jeda untuk browser menyiapkan halaman cetak
-                    overlay.classList.remove('show');
-
-                    // Fungsi untuk membersihkan status cetak dan merestorasi UI
-                    let isCleaned = false;
-                    const cleanup = () => {
-                        if (isCleaned) return;
-                        isCleaned = true;
-
-                        // Hapus class print-mode agar UI kembali responsif normal
-                        document.body.classList.remove('print-mode');
-
-                        // Kembalikan ukuran font Chart.js default
-                        Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
-
-                        // Kembalikan tema jika pengguna sebelumnya dalam dark mode
-                        if (isDarkMode) {
-                            document.body.classList.add('dark-mode');
-                            Chart.defaults.color = "#cbd5e1";
-                        } else {
-                            Chart.defaults.color = "#4b5563";
-                        }
-
-                        // Kembalikan chart web ke status semula/default
-                        if (states.length > 0 && originalFunc) {
-                            originalFunc(states[0].type, document.querySelector(`#${modId} .sim-btn-act`));
-                        }
-
-                        // Force update semua chart agar sesuai viewport normal kembali
-                        [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
-                            if (chart) chart.update('none');
-                        });
-
-                        // Hapus event listener agar tidak menumpuk
-                        window.removeEventListener('afterprint', cleanup);
-                    };
-
-                    // Pasang event listener setelah print selesai/dibatalkan
-                    window.addEventListener('afterprint', cleanup);
-
-                    setTimeout(() => {
-                        window.print();
-
-                        // Fallback jika afterprint tidak dipicu dengan benar di browser tertentu
-                        setTimeout(cleanup, 2500);
-                    }, 300);
-
-                } catch (error) {
-                    console.error(error);
-                    alert("Maaf, terjadi kesalahan saat merender data simulasi.");
-                    overlay.classList.remove('show');
-
-                    // Lakukan cleanup jika terjadi error
-                    document.body.classList.remove('print-mode');
-                    Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
-                    if (isDarkMode) {
-                        document.body.classList.add('dark-mode');
-                        Chart.defaults.color = "#cbd5e1";
-                    }
-                }
-            }
-
-            window.onload = function () {
-                initCharts();
-                startLiveClock('live-time-text');
-
-                const savedTheme = localStorage.getItem('theme');
-                const isDark = savedTheme === 'dark';
-                if (isDark) {
-                    document.body.classList.add('dark-mode');
-                    const themeBtn = document.getElementById('themeBtn');
-                    if (themeBtn) themeBtn.innerText = "☀️";
-                    setTimeout(() => {
-                        Chart.defaults.color = "#cbd5e1";
-                        const gridColor = "rgba(255, 255, 255, 0.08)";
-                        const textColor = "#cbd5e1";
-                        [simScatter, simHist, simCtrl, simPareto].forEach(chart => {
-                            if (chart) {
-                                if (chart.options.scales) {
-                                    Object.keys(chart.options.scales).forEach(scaleKey => {
-                                        let scale = chart.options.scales[scaleKey];
-                                        if (!scale.grid) scale.grid = {};
-                                        scale.grid.color = gridColor;
-                                        if (!scale.ticks) scale.ticks = {};
-                                        scale.ticks.color = textColor;
-                                    });
-                                }
-                                if (chart === simPareto) {
-                                    chart.data.datasets[1].backgroundColor = '#5c7aff';
-                                    chart.data.datasets[0].borderColor = '#f87171';
                                     chart.data.datasets[0].backgroundColor = '#f87171';
                                 }
                                 chart.update('none');
@@ -3423,11 +3285,11 @@
 
         <!-- Bottom Navigation Mobile -->
         <nav class="bottom-nav">
-            <a href="../index.html" class="bnav-item" title="Home">🏠<span>Home</span></a>
-            <a href="scatter.html" class="bnav-item" title="Scatter">📈<span>Scatter</span></a>
-            <a href="histogram.html" class="bnav-item" title="Histogram">📊<span>Histogram</span></a>
-            <a href="control-chart.html" class="bnav-item" title="Control">📉<span>Control</span></a>
-            <a href="pareto.html" class="bnav-item" title="Pareto">📋<span>Pareto</span></a>
+            <a href="../index.html" class="bnav-item" title="Home"><i class="bi bi-house-door"></i><span>Home</span></a>
+            <a href="scatter.html" class="bnav-item" title="Scatter"><i class="bi bi-graph-up"></i><span>Scatter</span></a>
+            <a href="histogram.html" class="bnav-item" title="Histogram"><i class="bi bi-bar-chart-line"></i><span>Histogram</span></a>
+            <a href="control-chart.html" class="bnav-item" title="Control"><i class="bi bi-activity"></i><span>Control</span></a>
+            <a href="pareto.html" class="bnav-item" title="Pareto"><i class="bi bi-clipboard-data"></i><span>Pareto</span></a>
         </nav>
         <script src="/js/chatbot.js" defer></script>
 </body>

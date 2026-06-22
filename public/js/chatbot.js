@@ -43,7 +43,7 @@
             </div>
             <div id="qcc-chatbot-messages" class="qcc-chatbot-messages">
                 <div class="qcc-chat-message bot">
-                    Halo! Saya Asisten AI spesialis Quality Control (QCC), 5R/5S, dan perbaikan proses manufaktur Toyota. 
+                    Halo! Saya Asisten AI spesialis Quality Control (QCC), 5R/5S, dan perbaikan proses manufaktur. 
                     Ada yang bisa saya bantu tentang grafik Histogram, Scatter Diagram, Pareto, Control Chart, konsep Henkaten, atau line stop?
                 </div>
             </div>
@@ -164,7 +164,9 @@
         msg.className = `qcc-chat-message ${role}`;
         msg.innerHTML = parseMarkdown(text);
         messagesArea.appendChild(msg);
-        scrollToBottom();
+        if (role !== 'bot') {
+            scrollToBottom();
+        }
     }
 
     // Send Message Action
@@ -248,20 +250,7 @@
             headerControls.appendChild(btn);
         }
 
-        // --- Handle Mobile Bottom-Nav ---
-        const bottomNav = document.querySelector('.bottom-nav');
-        if (bottomNav && !document.getElementById('mobileChatbotBtn')) {
-            const a = document.createElement('a');
-            a.id = 'mobileChatbotBtn';
-            a.href = '#';
-            a.className = 'bnav-item';
-            a.title = 'Chatbot AI';
-            a.innerHTML = '🤖<span>Chatbot</span>';
-            a.addEventListener('click', toggleChatbot);
 
-            // Append to bottom navigation bar on mobile
-            bottomNav.appendChild(a);
-        }
 
         // --- Handle Home Page (index.html) Mobile Dropdown ---
         const isHomePage = window.location.pathname.endsWith('index.html') ||
