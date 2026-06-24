@@ -205,25 +205,43 @@
                 })
             });
 
-            const data = await response.json();
-
             // Remove typing loader
             const loaderEl = document.getElementById('qcc-chatbot-loader');
             if (loaderEl) loaderEl.remove();
 
-            if (response.ok && data.response) {
-                // Render bot answer
-                appendMessage('bot', data.response);
+            if (response.ok) {
+                // Create bot message container for streaming
+                const msg = document.createElement('div');
+                msg.className = `qcc-chat-message bot`;
+                messagesArea.appendChild(msg);
+                scrollToBottom();
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let done = false;
+                let botText = '';
+
+                while (!done) {
+                    const { value, done: readerDone } = await reader.read();
+                    done = readerDone;
+                    if (value) {
+                        const chunk = decoder.decode(value, { stream: !done });
+                        botText += chunk;
+                        msg.innerHTML = parseMarkdown(botText);
+                        scrollToBottom();
+                    }
+                }
 
                 // Add to history state
                 chatHistory.push({ role: 'user', text: text });
-                chatHistory.push({ role: 'bot', text: data.response });
+                chatHistory.push({ role: 'bot', text: botText });
 
                 // Cap history length to avoid huge payload size
                 if (chatHistory.length > maxHistoryLength) {
                     chatHistory = chatHistory.slice(chatHistory.length - maxHistoryLength);
                 }
             } else {
+                const data = await response.json().catch(() => ({}));
                 appendMessage('bot', `⚠️ Gagal memuat jawaban. ${data.error || 'Silakan coba lagi.'}`);
             }
         } catch (err) {
