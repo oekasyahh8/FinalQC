@@ -229,9 +229,16 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const session = chatSessions[sId];
-    const modelsToTry = ['gemini-3.5-flash', 'gemini-2.5-flash'];
+
+    // Limit history length to prevent high latency (keep last 12 messages = 6 turns)
+    const maxHistoryLength = 12;
+    if (session.history && session.history.length > maxHistoryLength) {
+      session.history = session.history.slice(-maxHistoryLength);
+    }
+
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-lite-latest'];
     let lastError = null;
-    let responseText = null;
+    let streamStarted = false;
 
     for (const modelName of modelsToTry) {
       let attempts = 0;
@@ -251,43 +258,55 @@ app.post('/api/chat', async (req, res) => {
             history: session.history
           });
 
-          const result = await chat.sendMessage(message);
-          const response = await result.response;
-          responseText = response.text();
+          const result = await chat.sendMessageStream(message);
+
+          if (!streamStarted) {
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.setHeader('Transfer-Encoding', 'chunked');
+            streamStarted = true;
+          }
+
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            res.write(chunkText);
+          }
 
           // Update history in-memory session on success
           session.history = await chat.getHistory();
           console.log(`[Chat Session ${sId}] Success with model ${modelName}`);
-          break; // Break the retry loop for this model
+          res.end();
+          return; // Finish request successfully
         } catch (error) {
           lastError = error;
           console.warn(`[Chat Session ${sId}] Failed with model ${modelName} (Attempt ${attempts}/${maxAttempts}):`, error.message || error);
           
+          if (streamStarted) {
+            // If streaming has already started, we cannot fallback or retry
+            res.write('\n[Koneksi dengan AI Terputus]');
+            res.end();
+            return;
+          }
+
           if (attempts < maxAttempts) {
-            const delay = attempts * 1000; // Wait 1s, then 2s
+            const delay = attempts * 1000; // Wait 1s
             console.log(`Waiting ${delay}ms before retrying...`);
             await sleep(delay);
           }
         }
       }
-      
-      // If we got a response successfully, stop trying other models
-      if (responseText !== null) {
-        break;
-      }
       console.log(`[Chat Session ${sId}] Model ${modelName} exhausted. Moving to next model...`);
     }
 
-    if (responseText === null) {
+    if (!streamStarted) {
       throw lastError || new Error('All generative models failed to respond.');
     }
-
-    res.json({ response: responseText });
   } catch (error) {
     // Log actual error on server side for debugging
     console.error('Gemini API Error after retries and fallbacks:', error);
-    // Return a generic, safe 500 error to prevent system detail leakage
-    res.status(500).json({ error: 'Gagal berkomunikasi dengan AI. Silakan coba beberapa saat lagi.' });
+    // Return a generic, safe 500 error only if headers haven't been sent yet
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Gagal berkomunikasi dengan AI. Silakan coba beberapa saat lagi.' });
+    }
   }
 });
 
