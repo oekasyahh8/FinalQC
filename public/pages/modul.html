@@ -1317,43 +1317,43 @@
         <!-- Modul Content -->
             <div class="container">
                 <div class="sidebar">
-                    <button class="nav-btn active" onclick="openModule('dasar')">
+                    <button class="nav-btn active" onclick="openModule('dasar', this)">
                         <span class="desktop-text">💡 Dasar QCC & PDCA</span>
                         <span class="mobile-text">💡 Dasar</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('scatter')">
+                    <button class="nav-btn" onclick="openModule('scatter', this)">
                         <span class="desktop-text">📈 Scatter Diagram</span>
                         <span class="mobile-text">📈 Scatter</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('histogram')">
+                    <button class="nav-btn" onclick="openModule('histogram', this)">
                         <span class="desktop-text">📊 Histogram Data</span>
                         <span class="mobile-text">📊 Histogram</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('control')">
+                    <button class="nav-btn" onclick="openModule('control', this)">
                         <span class="desktop-text">📉 Control Chart</span>
                         <span class="mobile-text">📉 Kontrol</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('pareto')">
+                    <button class="nav-btn" onclick="openModule('pareto', this)">
                         <span class="desktop-text">📊 Pareto Diagram</span>
                         <span class="mobile-text">📊 Pareto</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('checksheet')">
+                    <button class="nav-btn" onclick="openModule('checksheet', this)">
                         <span class="desktop-text">📋 Check Sheet</span>
                         <span class="mobile-text">📋 Check Sheet</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('fishbone')">
+                    <button class="nav-btn" onclick="openModule('fishbone', this)">
                         <span class="desktop-text">🐟 Fishbone Diagram</span>
                         <span class="mobile-text">🐟 Fishbone</span>
                     </button>
-                    <button class="nav-btn" onclick="openModule('stratifikasi')">
+                    <button class="nav-btn" onclick="openModule('stratifikasi', this)">
                         <span class="desktop-text">🗂️ Stratifikasi</span>
                         <span class="mobile-text">🗂️ Stratifikasi</span>
                     </button>
-                <button class="nav-btn" onclick="openModule('kahoot')">
+                <button class="nav-btn" onclick="openModule('kahoot', this)">
                         <span class="desktop-text">🎮 Kahoot QCC</span>
                         <span class="mobile-text">🎮 Kahoot</span>
                     </button>
-                <button class="nav-btn" onclick="openModule('8-steps')">
+                <button class="nav-btn" onclick="openModule('8-steps', this)">
                         <span class="desktop-text">📋 8 Steps Meetings</span>
                         <span class="mobile-text">📋 8 Steps</span>
                     </button>
@@ -2818,39 +2818,36 @@
             // ----------------------------------------------------
             // SYSTEM: THEME & NAVIGATION
             // ----------------------------------------------------
-            Chart.defaults.font.family = "'Poppins', sans-serif";
-            Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
-            Chart.defaults.color = "#4b5563";
-            Chart.defaults.plugins.legend.display = false;
+            if (typeof Chart !== 'undefined') {
+                Chart.defaults.font.family = "'Poppins', sans-serif";
+                Chart.defaults.font.size = window.innerWidth < 600 ? 11 : 13;
+                Chart.defaults.color = "#4b5563";
+                Chart.defaults.plugins.legend.display = false;
+            }
 
             function toggleTheme() {
                 QCC.toggleTheme();
             }
 
-            function openModule(modId) {
+            function openModule(modId, button = null) {
+                const target = document.getElementById(modId);
+                if (!target) return;
+
                 document.querySelectorAll('.module-section').forEach(el => el.classList.remove('active'));
                 document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-                document.getElementById(modId).classList.add('active');
-                
-                if (event && event.currentTarget && event.currentTarget.classList) {
-                    event.currentTarget.classList.add('active');
-                } else {
-                    const btns = document.querySelectorAll('.nav-btn');
-                    for (let b of btns) {
-                        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(modId)) {
-                            b.classList.add('active');
-                        }
-                    }
-                }
-                
-                if (modId !== '8-steps') {
+                target.classList.add('active');
+
+                const activeButton = button || document.querySelector(`.nav-btn[data-module="${modId}"]`);
+                if (activeButton) activeButton.classList.add('active');
+
+                if (slideState[modId] !== undefined) {
                     goToSlide(modId, 0);
                 }
 
                 if (modId === '8-steps') {
                     setTimeout(() => {
                         const wrapper = document.getElementById('pdf-iframe-wrapper');
-                        if (wrapper && wrapper.innerHTML.trim() === '<!-- PDF Object will be injected here dynamically by JS to prevent rendering bugs -->') {
+                        if (wrapper && !wrapper.dataset.loaded) {
                             const url = wrapper.getAttribute('data-pdf-url');
                             wrapper.innerHTML = `
                                 <object data="${url}" type="application/pdf" width="100%" style="height: 85vh; min-height: 800px; border: none;">
@@ -2860,6 +2857,7 @@
                                     </div>
                                 </object>
                             `;
+                            wrapper.dataset.loaded = 'true';
                         }
                     }, 100);
                 }
@@ -2872,6 +2870,7 @@
 
             function changeSlide(moduleId, direction) {
                 const slides = document.querySelectorAll(`#slide-${moduleId} .slide`);
+                if (!slides.length || slideState[moduleId] === undefined) return;
                 let newIdx = slideState[moduleId] + direction;
                 if (newIdx >= 0 && newIdx < slides.length) goToSlide(moduleId, newIdx);
             }
@@ -2881,6 +2880,9 @@
                 const dots = document.querySelectorAll(`#dots-${moduleId} .dot`);
                 const btnPrev = document.querySelector(`#${moduleId} .slide-btn:first-child`);
                 const btnNext = document.querySelector(`#${moduleId} .slide-btn:last-child`);
+
+                if (!slides.length || !dots.length || !btnPrev || !btnNext || slideState[moduleId] === undefined) return;
+                if (!Number.isInteger(index) || index < 0 || index >= slides.length || index >= dots.length) return;
 
                 slides[slideState[moduleId]].classList.remove('active-slide');
                 dots[slideState[moduleId]].classList.remove('active');
@@ -3121,166 +3123,65 @@
             }
 
             // ----------------------------------------------------
-            // SYSTEM: NATIVE PRINT TO PDF (100% BEBAS DARI BLANK)
+            // SYSTEM: PRINT MODULE TO PDF
             // ----------------------------------------------------
-            async function exportToPDFNative(modId, titleName) {
-                // Tampilkan layar loading agar UI terkunci
-                const overlay = document.getElementById('pdf-loading-overlay');
-                const loadingText = document.querySelector('#pdf-loading-overlay p');
-                overlay.classList.add('show');
-                if (loadingText) loadingText.innerHTML = "Mengekstrak materi teori dan tabel...";
+            function exportToPDFNative(modId, titleName) {
+                const module = document.getElementById(modId);
+                const printArea = document.getElementById('print-area');
+                if (!module || !printArea) return;
 
-                // Tambahkan print-mode ke body sebelum melakukan capture
-                document.body.classList.add('print-mode');
+                const originalMarkup = printArea.innerHTML;
+                const clone = module.cloneNode(true);
+                clone.id = '';
+                clone.classList.add('active');
+                clone.style.cssText += ';position:relative;inset:auto;width:100%;height:auto;opacity:1;visibility:visible;pointer-events:auto;';
 
-                // Gunakan font size desktop untuk grafik selama capture
-                Chart.defaults.font.size = 13;
+                clone.querySelectorAll('.slide').forEach(slide => {
+                    slide.classList.add('active-slide');
+                    slide.style.cssText += ';position:relative;inset:auto;width:100%;height:auto;opacity:1;visibility:visible;pointer-events:auto;transform:none;';
+                });
+                clone.querySelectorAll('.slide-controls, .action-btns, button, .pdf-action-buttons').forEach(el => el.remove());
 
-                // Pastikan tema terang aktif karena media kertas butuh kontras tinggi
-                const isDarkMode = document.body.classList.contains('dark-mode');
-                if (isDarkMode) {
-                    document.body.classList.remove('dark-mode');
-                    Chart.defaults.color = "#4b5563";
-                }
+                const sourceCanvases = module.querySelectorAll('canvas');
+                clone.querySelectorAll('canvas').forEach((canvas, index) => {
+                    const source = sourceCanvases[index];
+                    if (!source) return;
+                    const image = document.createElement('img');
+                    image.src = source.toDataURL('image/png');
+                    image.alt = 'Grafik simulasi';
+                    image.style.cssText = 'display:block;max-width:100%;height:auto;margin:12px auto;';
+                    canvas.replaceWith(image);
+                });
 
-                // Variabel untuk melacak status diagram saat merestorasi
-                let states = [];
-                let chartInstance = null;
-                let originalFunc = null;
+                printArea.innerHTML = '';
+                const cover = document.createElement('div');
+                cover.className = 'print-cover';
+                const heading = document.createElement('h1');
+                heading.className = 'print-cover-title';
+                heading.textContent = titleName || module.querySelector('.mod-title')?.textContent || module.querySelector('h2')?.textContent || 'Modul Pembelajaran QCC';
+                const subtitle = document.createElement('p');
+                subtitle.className = 'print-cover-subtitle';
+                subtitle.textContent = 'Materi Pembelajaran Quality Control Circle';
+                cover.append(heading, subtitle);
+                printArea.append(cover, clone);
 
+                const restore = () => {
+                    printArea.innerHTML = originalMarkup;
+                    window.removeEventListener('afterprint', restore);
+                };
+                window.addEventListener('afterprint', restore, { once: true });
                 try {
-                    // Beri waktu 300ms agar CSS warna berubah sebelum sistem mengekstrak
-                    await new Promise(r => setTimeout(r, 300));
-
-                    let teori1_judul = "", teori1_isi = "", teori2_judul = "", teori2_isi = "", tableHTML = "", kahootHTML = "";
-                    
-                    if (modId === 'kahoot') {
-                        // Gabungkan semua slides teori kahoot
-                        const slide0 = document.querySelector('#slide-kahoot-0 .theory-content').innerHTML;
-                        const slide1 = document.querySelector('#slide-kahoot-1 .theory-content').innerHTML;
-                        const slide2 = document.querySelector('#slide-kahoot-2 .theory-content').innerHTML;
-                        
-                        // Buang tombol download agar tidak tercetak
-                        const cleanSlide0 = slide0.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
-                        const cleanSlide1 = slide1.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
-                        const cleanSlide2 = slide2.replace(/<div class="action-btns"[\s\S]*?<\/div>/g, '');
-
-                        kahootHTML = `
-                            <div style="background: #ffffff; padding: 20px; font-family: sans-serif; line-height: 1.6;">
-                                ${cleanSlide0}
-                                <hr style="margin: 20px 0; border: 0; border-top: 2px dashed #cbd5e1;">
-                                ${cleanSlide1}
-                                <hr style="margin: 20px 0; border: 0; border-top: 2px dashed #cbd5e1;">
-                                ${cleanSlide2}
-                            </div>
-                        `;
-                    } else {
-                        teori1_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) h4`).innerHTML;
-                        teori1_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(1) p`).innerHTML;
-                        teori2_judul = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) h4`).innerHTML;
-                        teori2_isi = document.querySelector(`#${modId} .theory-content .detail-card:nth-child(2) p`).innerHTML;
-                        tableHTML = document.querySelector(`#${modId} .table-content`).innerHTML;
-                    }
-
-                    // PERSIAPAN PENGAMBILAN FOTO SEMUA CHART SIMULASI
-                    if (modId === 'scatter') {
-                        chartInstance = simScatter; originalFunc = updateScatterSim;
-                        states = [
-                            { type: 'positif', label: '1. Pola Korelasi Positif (Searah)' },
-                            { type: 'negatif', label: '2. Pola Korelasi Negatif (Terbalik)' },
-                            { type: 'acak', label: '3. Pola Tidak Berkorelasi (Acak)' }
-                        ];
-                    } else if (modId === 'histogram') {
-                        chartInstance = simHist; originalFunc = updateHistSim;
-                        states = [
-                            { type: 'normal', label: '1. Pola Distribusi Normal (Lonceng Sempurna)' },
-                            { type: 'menceng', label: '2. Pola Distribusi Menceng (Skewed)' },
-                            { type: 'bimodal', label: '3. Pola Distribusi Dua Puncak (Bimodal)' }
-                        ];
-                    } else if (modId === 'control') {
-                        chartInstance = simCtrl; originalFunc = updateCtrlSim;
-                        states = [
-                            { type: 'normal', label: '1. Pola Proses Stabil Alami (In Control)' },
-                            { type: 'outlier', label: '2. Pola Deteksi Titik Ekstrem (Outlier)' },
-                            { type: 'shift', label: '3. Pola Deteksi Pergeseran Rata-rata (Shift)' },
-                            { type: 'trend', label: '4. Pola Deteksi Kerusakan Bertahap (Trend)' }
-                        ];
-                    } else if (modId === 'pareto') {
-                        chartInstance = simPareto; originalFunc = updateParetoSim;
-                        states = [
-                            { type: 'dominan', label: '1. Pola Cacat Dominan (Vital Few)' },
-                            { type: 'merata', label: '2. Pola Distribusi Merata (Flat)' },
-                            { type: 'ekstrem', label: '3. Pola Penyebab Tunggal Ekstrem' }
-                        ];
-                    }
-
-                    let albumHTML = "";
-                    let count = 1;
-
-                    if (states.length > 0) {
-                        // Matikan animasi transisi Chart.js agar langsung instan difoto
-                        let prevAnim = Chart.defaults.animation.duration;
-                        Chart.defaults.animation.duration = 0;
-
-                        // LOOP: Ubah Chart -> Tunggu Digambar -> Jepret Foto -> Ambil Penjelasan
-                        for (let st of states) {
-                            if (loadingText) {
-                                const cleanLabel = st.label.split('. ')[1] || st.label;
-                                loadingText.innerHTML = `Mengambil gambar grafik (${count}/${states.length}): <strong>${cleanLabel}</strong>...`;
-                            }
-
-                            originalFunc(st.type, null);
-                            chartInstance.update('none');
-
-                            // WAKTU TUNGGU SANGAT KRUSIAL: Tunggu 400ms agar browser selesai menggambar pixel di kanvas
-                            await new Promise(r => setTimeout(r, 400));
-
-                            // Jepret foto dari kanvas chart
-                            const imgData = chartInstance.canvas.toDataURL('image/png', 1.0);
-
-                            // Tarik teks penjelasan di dalam box kuning
-                            const descHTML = document.getElementById(`desc-${modId}`).innerHTML;
-
-                            // Bangun struktur kotak PDF dua kolom (Side-by-Side)
-                            albumHTML += `
-                        <div class="print-row">
-                            <div class="print-col-chart">
-                                <img src="${imgData}" alt="${st.label}">
-                            </div>
-                            <div class="print-col-desc">
-                                <h3 style="color: var(--primary); margin-top: 0; font-size: 15px; border-bottom: 2px solid #cbd5e1; padding-bottom: 6px; margin-bottom: 8px;">
-                                    ${st.label}
-                                </h3>
-                                <div style="background: #f8fafc; border-left: 4px solid #10b981; padding: 10px; border-radius: 6px; font-size: 12.5px; line-height: 1.5; color: #1f2937;">
-                                    ${descHTML}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                            count++;
-                        }
-
-                        Chart.defaults.animation.duration = prevAnim;
-                    } else if (modId !== 'kahoot') {
-                        // For non-chart theoretical tools, Slide 2 is a custom HTML visualization (table or list)
-                        // Let's capture the Slide 2 HTML directly!
-                        const slide2HTML = document.querySelector(`#slide-${modId} .slide:nth-child(2)`).innerHTML;
-
-                        albumHTML += `
-                    <div style="background: #ffffff; border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; margin-bottom: 25px; page-break-inside: avoid;">
-                        ${slide2HTML}
-                    </div>
-                `;
-                    }
-
-                                    chart.data.datasets[0].backgroundColor = '#f87171';
-                                }
-                                chart.update('none');
-                            }
-                        });
-                    }, 100);
+                    window.print();
+                    window.setTimeout(restore, 1000);
+                } catch (error) {
+                    restore();
+                    console.error('Gagal membuka dialog cetak modul:', error);
                 }
-            };
+            }
+
+            // Jalankan jam segera dan aktifkan grafik setelah semua elemen halaman tersedia.
+            startLiveClock('live-time-text');
+            if (typeof Chart !== 'undefined') initCharts();
         </script>
 
         <!-- Bottom Navigation Mobile -->
